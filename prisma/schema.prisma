@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  username  String   @unique
+  password  String   // bcrypt hashed password
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions         Transaction[]
+  investmentPlans      InvestmentPlan[]
+  budgetRules          BudgetRule[]
+  recurringTransactions RecurringTransaction[]
+  salaries             Salary[]
+  goals                Goal[]
+}
+
+model Category {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique
+  type      String   // income, expense
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+}
+
+model Transaction {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Float
+  category  String
+  type      String   // income, expense
+  date      DateTime
+  description String?
+  recurringId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([date])
+  @@index([category])
+  @@index([type])
+  @@index([recurringId])
+}
+
+model InvestmentPlan {
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId               String   @db.ObjectId
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goalId               String?  @db.ObjectId // Optional: Link to a specific goal
+  name                 String
+  monthlyContribution  Float
+  expectedReturnMin    Float
+  expectedReturnMax    Float
+  compoundingFrequency String   // monthly, quarterly, annually
+  annualIncreasePercent Float
+  startDate            DateTime
+  endDate              DateTime?
+  status               String   // active, paused, archived
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([userId])
+  @@index([goalId])
+  @@index([status])
+}
+
+model BudgetRule {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String   @db.ObjectId
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  needsPercent   Float
+  wantsPercent   Float
+  savingsPercent Float
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model RecurringTransaction {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @db.ObjectId
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactionData String
+  frequency       String
+  nextDueDate     DateTime
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Salary {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String   @db.ObjectId
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount            Float
+  lastUpdatedDate   DateTime
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Goal {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  targetAmount Float
+  targetDate  DateTime
+  description String?
+  status      String   // on_track, behind, completed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([targetDate])
+}
