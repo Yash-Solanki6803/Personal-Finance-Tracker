@@ -50,7 +50,7 @@ function NewGoalForm() {
   const onSubmit = async (data: FormValues) => {
     try {
       setError(null);
-      
+
       // Convert date to ISO string
       let dateValue: string | undefined;
       if (data.targetDate) {
@@ -60,24 +60,33 @@ function NewGoalForm() {
           dateValue = new Date(data.targetDate).toISOString();
         }
       }
-      
+
+      const targetAmountValue = typeof data.targetAmount === "number"
+        ? data.targetAmount
+        : Number(data.targetAmount);
+
+      if (isNaN(targetAmountValue) || targetAmountValue <= 0) {
+        setError("Invalid target amount");
+        return;
+      }
+
       const payload = {
         name: data.name || "",
-        targetAmount: typeof data.targetAmount === "number" ? data.targetAmount : Number(data.targetAmount),
+        targetAmount: targetAmountValue,
         targetDate: dateValue || new Date().toISOString(),
         description: data.description || undefined,
         status: data.status || "on_track",
       };
-      
+
       const res = await fetch("/api/goals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      
+
       const body = await res.json();
       if (!res.ok) throw new Error(body.message || "Failed to create goal");
-      
+
       router.push("/goals");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");

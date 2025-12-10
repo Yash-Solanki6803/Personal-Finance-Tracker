@@ -68,38 +68,39 @@ export async function GET(request: NextRequest) {
       cashCumulative[m] = cumulativeCash;
     });
 
-    // Calculate investment value for each month
+    // Calculate investment value for each month using proper SIP formula
     const investmentTimeline: Record<string, { min: number; max: number }> = {};
     months.forEach(m => investmentTimeline[m] = { min: 0, max: 0 });
     for (const inv of investments) {
       const start = new Date(inv.startDate);
-      let n = 1;
-      if (inv.compoundingFrequency === "monthly") n = 12;
-      else if (inv.compoundingFrequency === "quarterly") n = 4;
-      else if (inv.compoundingFrequency === "annually") n = 1;
-      const rMin = inv.expectedReturnMin / 100;
-      const rMax = inv.expectedReturnMax / 100;
+      const monthlyRateMin = inv.expectedReturnMin / 100 / 12;
+      const monthlyRateMax = inv.expectedReturnMax / 100 / 12;
+      const P = inv.monthlyContribution;
+
       months.forEach((m) => {
         const [year, month] = m.split("-").map(Number);
         const monthDate = new Date(year, month-1, 1);
         if (monthDate < start) return;
-        const elapsedMonths = (year - start.getFullYear()) * 12 + (month - (start.getMonth()+1));
-        // FV = P * [((1 + r/n)^(n*t) - 1) / (r/n)]
-        const t = elapsedMonths / 12;
-        const periods = Math.floor(n * t);
+
+        // Calculate elapsed months
+        const elapsedMonths = Math.max(0, (year - start.getFullYear()) * 12 + (month - (start.getMonth()+1)));
+        if (elapsedMonths === 0) return;
+
+        // SIP Future Value Formula: FV = P × [(1 + r)^n - 1] / r × (1 + r)
         let fvMin = 0, fvMax = 0;
-        if (periods > 0 && rMin > 0) {
-          fvMin = inv.monthlyContribution * (((1 + rMin / n) ** periods - 1) / (rMin / n));
+        if (monthlyRateMin > 0) {
+          fvMin = P * (((1 + monthlyRateMin) ** elapsedMonths - 1) / monthlyRateMin) * (1 + monthlyRateMin);
         } else {
-          fvMin = inv.monthlyContribution * periods;
+          fvMin = P * elapsedMonths;
         }
-        if (periods > 0 && rMax > 0) {
-          fvMax = inv.monthlyContribution * (((1 + rMax / n) ** periods - 1) / (rMax / n));
+        if (monthlyRateMax > 0) {
+          fvMax = P * (((1 + monthlyRateMax) ** elapsedMonths - 1) / monthlyRateMax) * (1 + monthlyRateMax);
         } else {
-          fvMax = inv.monthlyContribution * periods;
+          fvMax = P * elapsedMonths;
         }
-        investmentTimeline[m].min += fvMin;
-        investmentTimeline[m].max += fvMax;
+
+        investmentTimeline[m].min += Math.max(0, fvMin);
+        investmentTimeline[m].max += Math.max(0, fvMax);
       });
     }
 

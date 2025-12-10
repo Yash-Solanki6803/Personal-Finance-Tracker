@@ -39,7 +39,7 @@ function NewInvestmentPlanForm() {
     if (name || monthlyContribution) {
       reset({
         name: name ? decodeURIComponent(name) : "",
-        monthlyContribution: monthlyContribution ? parseFloat(monthlyContribution) : 0,
+        monthlyContribution: monthlyContribution ? Math.max(0, parseFloat(monthlyContribution) || 0) : 0,
         compoundingFrequency: "monthly",
         annualIncreasePercent: 10, // Default 10% annual increase when creating from goal
         status: "active",

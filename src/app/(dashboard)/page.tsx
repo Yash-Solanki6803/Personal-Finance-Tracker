@@ -85,6 +85,7 @@ function DashboardContent() {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null);
         const today = new Date();
         const month = String(today.getMonth() + 1).padStart(2, "0");
         const year = today.getFullYear();
@@ -100,14 +101,14 @@ function DashboardContent() {
 
         if (summaryRes.ok) {
           const summaryData = await summaryRes.json();
-          if (summaryData.success) {
+          if (summaryData.success && summaryData.data) {
             setSummary(summaryData.data);
           }
         }
 
         if (dashboardRes.ok) {
           const dashboardData = await dashboardRes.json();
-          if (dashboardData.success) {
+          if (dashboardData.success && dashboardData.data) {
             setDashboardSummary(dashboardData.data);
           }
         }
@@ -117,6 +118,8 @@ function DashboardContent() {
           if (plansData.success && Array.isArray(plansData.data)) {
             setInvestmentPlans(plansData.data);
           }
+        } else {
+          setInvestmentPlans([]);
         }
 
         if (transactionsRes.ok) {
@@ -130,6 +133,8 @@ function DashboardContent() {
               : [];
             setTransactions(list);
           }
+        } else {
+          setTransactions([]);
         }
 
         if (salaryRes.ok) {
@@ -137,9 +142,12 @@ function DashboardContent() {
           if (salaryData.success && Array.isArray(salaryData.data)) {
             setSalaryHistory(salaryData.data);
           }
+        } else {
+          setSalaryHistory([]);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
+        console.error("Dashboard fetch error:", err);
+        setError(err instanceof Error ? err.message : "Failed to load dashboard data");
       } finally {
         setLoading(false);
       }

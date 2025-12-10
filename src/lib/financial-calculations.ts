@@ -39,56 +39,72 @@ export async function getNetWorth(userId: string): Promise<{ minNetWorth: number
   const now = new Date();
   let minValue = 0;
   let maxValue = 0;
+
   for (const inv of investments) {
-    // Calculate elapsed years
-    const years = (now.getTime() - inv.startDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-    // Compounding periods per year
-    let n = 1;
-    if (inv.compoundingFrequency === "monthly") n = 12;
-    else if (inv.compoundingFrequency === "quarterly") n = 4;
-    else if (inv.compoundingFrequency === "annually") n = 1;
-    // Compound interest formula for recurring monthly contributions (future value of an ordinary annuity)
-    // FV = P * [((1 + r/n)^(n*t) - 1) / (r/n)]
-    const rMin = inv.expectedReturnMin / 100;
-    const rMax = inv.expectedReturnMax / 100;
+    // Calculate elapsed months
+    const monthsElapsed = Math.max(0, Math.floor(
+      (now.getTime() - inv.startDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44)
+    ));
+
+    if (monthsElapsed === 0) continue;
+
+    // Monthly interest rate
+    const monthlyRateMin = inv.expectedReturnMin / 100 / 12;
+    const monthlyRateMax = inv.expectedReturnMax / 100 / 12;
     const P = inv.monthlyContribution;
-    const periods = Math.floor(n * years);
+
+    // SIP Future Value Formula: FV = P × [(1 + r)^n - 1] / r × (1 + r)
+    // where P = monthly contribution, r = monthly rate, n = number of months
     let fvMin = 0;
     let fvMax = 0;
-    if (periods > 0 && rMin > 0) {
-      fvMin = P * (((1 + rMin / n) ** periods - 1) / (rMin / n));
+
+    if (monthlyRateMin > 0) {
+      fvMin = P * (((1 + monthlyRateMin) ** monthsElapsed - 1) / monthlyRateMin) * (1 + monthlyRateMin);
     } else {
-      fvMin = P * periods;
+      fvMin = P * monthsElapsed;
     }
-    if (periods > 0 && rMax > 0) {
-      fvMax = P * (((1 + rMax / n) ** periods - 1) / (rMax / n));
+
+    if (monthlyRateMax > 0) {
+      fvMax = P * (((1 + monthlyRateMax) ** monthsElapsed - 1) / monthlyRateMax) * (1 + monthlyRateMax);
     } else {
-      fvMax = P * periods;
+      fvMax = P * monthsElapsed;
     }
-    minValue += fvMin;
-    maxValue += fvMax;
+
+    minValue += Math.max(0, fvMin);
+    maxValue += Math.max(0, fvMax);
   }
+
   return {
-    minNetWorth: bankBalance + minValue,
-    maxNetWorth: bankBalance + maxValue,
+    minNetWorth: Math.round((bankBalance + minValue) * 100) / 100,
+    maxNetWorth: Math.round((bankBalance + maxValue) * 100) / 100,
   };
 }
 
 /**
- * Calculate goal progress based on transactions and investments
+ * Calculate goal progress based on investment plans linked to this goal
  */
 export async function getGoalProgress(userId: string, goalId: string): Promise<number> {
-  // Sum all transactions and investments linked to this goal
-  const transactions = await prisma.transaction.findMany({
-    where: { userId, category: goalId },
-    select: { amount: true, type: true },
-  });
-  let contributed = 0;
-  for (const tx of transactions) {
-    if (tx.type === "income" || tx.type === "investment") contributed += tx.amount;
-  }
   // Get goal target
   const goal = await prisma.goal.findUnique({ where: { id: goalId } });
-  if (!goal) return 0;
-  return Math.min(100, (contributed / goal.targetAmount) * 100);
+  if (!goal || goal.userId !== userId) return 0;
+
+  // Get investment plans linked to this goal
+  const investmentPlans = await prisma.investmentPlan.findMany({
+    where: { userId, goalId, status: "active" },
+    select: { monthlyContribution: true, startDate: true },
+  });
+
+  // Calculate total contributed through investment plans
+  let contributed = 0;
+  const now = new Date();
+
+  for (const plan of investmentPlans) {
+    const monthsElapsed = Math.max(0, Math.floor(
+      (now.getTime() - plan.startDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44)
+    ));
+    contributed += plan.monthlyContribution * monthsElapsed;
+  }
+
+  // Return progress percentage
+  return Math.min(100, Math.round((contributed / goal.targetAmount) * 100 * 100) / 100);
 }

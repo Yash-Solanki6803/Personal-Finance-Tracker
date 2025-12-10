@@ -121,14 +121,14 @@ export default function InvestmentPlansComparePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white dark:bg-slate-900 p-4 rounded-lg border border-gray-200 dark:border-slate-800">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Original Plan</label>
-            <select value={leftId || ""} onChange={(e) => setLeftId(e.target.value || null)} className="w-full p-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg">
+            <select value={leftId || ""} onChange={(e) => setLeftId(e.target.value || null)} className="w-full p-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg" aria-label="Select original investment plan">
               <option value="">Select original plan</option>
               {plans.filter(p => !p.name.includes('(copy)')).map((p:any) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">What-If Plan</label>
-            <select value={rightId || ""} onChange={(e) => setRightId(e.target.value || null)} className="w-full p-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg">
+            <select value={rightId || ""} onChange={(e) => setRightId(e.target.value || null)} className="w-full p-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg" aria-label="Select what-if investment plan">
               <option value="">Select what-if plan</option>
               {plans.filter(p => p.name.includes('(copy)')).map((p:any) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>

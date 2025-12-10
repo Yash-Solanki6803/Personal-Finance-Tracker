@@ -241,6 +241,7 @@ function BudgetPageContent() {
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
               className="px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg"
+              aria-label="Select month for budget analysis"
             />
           </div>
 
@@ -336,6 +337,11 @@ function BudgetPageContent() {
                             style={{
                               width: `${Math.min(usagePercent, 100)}%`,
                             }}
+                            role="progressbar"
+                            aria-valuenow={Math.round(Math.min(usagePercent, 100))}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-label={`Budget usage for ${category}`}
                           />
                         </div>
                         <p className="text-xs text-gray-500 dark:text-gray-400">

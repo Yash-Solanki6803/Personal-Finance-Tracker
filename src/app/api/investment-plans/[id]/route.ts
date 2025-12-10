@@ -48,11 +48,20 @@ export async function DELETE(request: NextRequest, context: any) {
     const plan = await prisma.investmentPlan.findUnique({ where: { id } });
 
     if (!plan || plan.userId !== userId) {
-      return successResponse(null, "Investment plan not found", 404);
+      return errorResponse("Investment plan not found or unauthorized", 404);
     }
 
     // Delete the investment plan
     await prisma.investmentPlan.delete({ where: { id } });
+
+    // Write audit log entry
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        eventType: "investment_plan_deleted",
+        details: JSON.stringify({ planId: id, planName: plan.name }),
+      },
+    });
 
     return successResponse(null, "Investment plan deleted successfully");
   } catch (error) {

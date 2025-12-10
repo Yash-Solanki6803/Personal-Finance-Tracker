@@ -23,13 +23,13 @@ export const InvestmentPlanSchema = z.object({
   monthlyContribution: z
     .number()
     .positive("Monthly contribution must be positive"),
-  expectedReturnMin: z.number().min(0, "Expected return min must be >= 0"),
-  expectedReturnMax: z.number().min(0, "Expected return max must be >= 0"),
+  expectedReturnMin: z.number().min(0, "Expected return min must be >= 0").max(100, "Expected return min must be <= 100%"),
+  expectedReturnMax: z.number().min(0, "Expected return max must be >= 0").max(100, "Expected return max must be <= 100%"),
   compoundingFrequency: z.string().refine(
     (val) => ["monthly", "quarterly", "annually"].includes(val),
     "Compounding frequency must be 'monthly', 'quarterly', or 'annually'"
   ),
-  annualIncreasePercent: z.number().min(0, "Annual increase must be >= 0"),
+  annualIncreasePercent: z.number().min(0, "Annual increase must be >= 0").max(100, "Annual increase must be <= 100%"),
   startDate: z.union([z.string(), z.date()]),
   endDate: z.union([z.string(), z.date()]).optional(),
   status: z.string().refine(
@@ -37,7 +37,13 @@ export const InvestmentPlanSchema = z.object({
     "Status must be 'active', 'paused', or 'archived'"
   ),
   goalId: z.string().optional(), // Optional: Link to a specific goal
-});
+}).refine(
+  (data) => data.expectedReturnMax >= data.expectedReturnMin,
+  {
+    message: "Expected return max must be greater than or equal to expected return min",
+    path: ["expectedReturnMax"],
+  }
+);
 
 export const InvestmentPlanUpdateSchema = InvestmentPlanSchema.partial();
 
@@ -69,22 +75,23 @@ export const BudgetRuleSchema = z
     }
   );
 
-export const BudgetRuleUpdateSchema = BudgetRuleSchema.partial().refine(
+export const BudgetRuleUpdateSchema = z.object({
+  needsPercent: z.number().min(0).max(100).optional(),
+  wantsPercent: z.number().min(0).max(100).optional(),
+  savingsPercent: z.number().min(0).max(100).optional(),
+}).refine(
   (data) => {
-    if (
-      data.needsPercent !== undefined ||
-      data.wantsPercent !== undefined ||
-      data.savingsPercent !== undefined
-    ) {
-      const needs = data.needsPercent ?? 0;
-      const wants = data.wantsPercent ?? 0;
-      const savings = data.savingsPercent ?? 0;
-      return needs + wants + savings === 100;
-    }
-    return true;
+    // If any field is provided, all three must be provided and sum to 100
+    const hasAnyValue = data.needsPercent !== undefined || data.wantsPercent !== undefined || data.savingsPercent !== undefined;
+    if (!hasAnyValue) return true;
+
+    const hasAllValues = data.needsPercent !== undefined && data.wantsPercent !== undefined && data.savingsPercent !== undefined;
+    if (!hasAllValues) return false;
+
+    return Math.abs((data.needsPercent! + data.wantsPercent! + data.savingsPercent!) - 100) < 0.01;
   },
   {
-    message: "Needs + Wants + Savings must equal 100%",
+    message: "When updating budget rules, all three percentages must be provided and sum to 100%",
     path: ["savingsPercent"],
   }
 );

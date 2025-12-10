@@ -69,6 +69,10 @@ function NewTransactionForm() {
     try {
       setError(null);
       const amount = parseFloat(data.amount.toString());
+      if (isNaN(amount) || amount <= 0) {
+        setError("Invalid amount");
+        return;
+      }
       const payload: any = {
         ...data,
         amount,

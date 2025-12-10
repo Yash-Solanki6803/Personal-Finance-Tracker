@@ -70,7 +70,12 @@ export default function EditTransactionPage() {
   const onSubmit = async (data: FormValues) => {
     try {
       setError(null);
-      const payload = { ...data, date: new Date(data.date).toISOString(), amount: parseFloat(data.amount.toString()) };
+      const amount = parseFloat(data.amount.toString());
+      if (isNaN(amount) || amount <= 0) {
+        setError("Invalid amount");
+        return;
+      }
+      const payload = { ...data, date: new Date(data.date).toISOString(), amount };
       const res = await fetch(`/api/transactions/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },

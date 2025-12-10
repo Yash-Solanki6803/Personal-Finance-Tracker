@@ -65,8 +65,17 @@ function EditInvestmentPlanForm() {
   const onSubmit = async (data: FormValues) => {
     try {
       setError(null);
+
+      // Validate expected returns if both are provided
+      if (data.expectedReturnMin !== undefined && data.expectedReturnMax !== undefined) {
+        if (data.expectedReturnMax < data.expectedReturnMin) {
+          setError("Expected return max must be greater than or equal to expected return min");
+          return;
+        }
+      }
+
       const payload: any = {};
-      
+
       if (data.name !== undefined) payload.name = data.name;
       if (data.monthlyContribution !== undefined) payload.monthlyContribution = data.monthlyContribution;
       if (data.expectedReturnMin !== undefined) payload.expectedReturnMin = data.expectedReturnMin;
@@ -74,34 +83,34 @@ function EditInvestmentPlanForm() {
       if (data.compoundingFrequency !== undefined) payload.compoundingFrequency = data.compoundingFrequency;
       if (data.annualIncreasePercent !== undefined) payload.annualIncreasePercent = data.annualIncreasePercent;
       if (data.status !== undefined) payload.status = data.status;
-      
+
       if (data.startDate !== undefined) {
-        payload.startDate = data.startDate instanceof Date 
-          ? data.startDate.toISOString() 
+        payload.startDate = data.startDate instanceof Date
+          ? data.startDate.toISOString()
           : typeof data.startDate === 'string'
           ? new Date(data.startDate).toISOString()
           : new Date().toISOString();
       }
-      
+
       if (data.endDate !== undefined) {
-        payload.endDate = data.endDate 
-          ? (data.endDate instanceof Date 
-              ? data.endDate.toISOString() 
+        payload.endDate = data.endDate
+          ? (data.endDate instanceof Date
+              ? data.endDate.toISOString()
               : typeof data.endDate === 'string'
               ? new Date(data.endDate).toISOString()
               : undefined)
           : null;
       }
-      
+
       const res = await fetch(`/api/investment-plans/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      
+
       const body = await res.json();
       if (!res.ok) throw new Error(body.message || "Failed to update plan");
-      
+
       router.push("/investment-plans");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");

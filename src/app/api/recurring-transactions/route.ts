@@ -60,13 +60,27 @@ export async function POST(request: NextRequest) {
 
     const body = await validateBody(request);
 
+    // Normalize nextDueDate to Date object
+    const normalized = {
+      ...body,
+      nextDueDate: body.nextDueDate ? new Date(body.nextDueDate) : undefined,
+    };
+
     // Validate request body
-    const validatedData = RecurringTransactionSchema.parse(body);
+    const validatedData = RecurringTransactionSchema.parse(normalized);
+
+    // Ensure nextDueDate is a Date object
+    const nextDueDateValue = validatedData.nextDueDate instanceof Date
+      ? validatedData.nextDueDate
+      : new Date(validatedData.nextDueDate);
 
     // Create recurring transaction
     const transaction = await prisma.recurringTransaction.create({
       data: {
-        ...validatedData,
+        transactionData: validatedData.transactionData,
+        frequency: validatedData.frequency,
+        nextDueDate: nextDueDateValue,
+        isActive: validatedData.isActive ?? true,
         userId,
       },
     });
@@ -118,8 +132,14 @@ export async function PUT(request: NextRequest, context: any) {
 
     const body = await validateBody(request);
 
+    // Normalize nextDueDate to Date object if provided
+    const normalized: any = { ...body };
+    if (body.nextDueDate) {
+      normalized.nextDueDate = new Date(body.nextDueDate);
+    }
+
     // Validate request body
-    const validatedData = RecurringTransactionUpdateSchema.parse(body);
+    const validatedData = RecurringTransactionUpdateSchema.parse(normalized);
 
     // Update recurring transaction
     const transaction = await prisma.recurringTransaction.update({

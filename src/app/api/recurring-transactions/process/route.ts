@@ -61,6 +61,20 @@ export async function POST(request: NextRequest) {
         const transaction = await prisma.transaction.create({ data: createData });
         created.push(transaction);
 
+        // Write audit log entry
+        await prisma.auditLog.create({
+          data: {
+            userId,
+            eventType: "recurring_processed",
+            details: JSON.stringify({
+              recurringId: rt.id,
+              transactionId: transaction.id,
+              amount: transaction.amount,
+              date: transaction.date
+            }),
+          },
+        });
+
         // Calculate next due date
         const nextDate = getNextDueDate(rt.nextDueDate, rt.frequency);
 

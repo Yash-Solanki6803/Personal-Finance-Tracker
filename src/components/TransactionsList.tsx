@@ -95,7 +95,7 @@ export function TransactionsList() {
           : Array.isArray(payload?.transactions)
           ? payload.transactions
           : [];
-        
+
         // Client-side sorting (API doesn't support sort parameter yet)
         const sorted = [...list].sort((a, b) => {
           let comparison = 0;
@@ -116,7 +116,7 @@ export function TransactionsList() {
         });
 
         setTransactions(sorted);
-        
+
         if (payload.pagination) {
           setPagination(payload.pagination);
         }
@@ -136,7 +136,7 @@ export function TransactionsList() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this transaction? This action cannot be undone.")) return;
-    
+
     const previous = transactions;
     setTransactions((t) => t.filter((x) => x.id !== id));
     setDeletingId(id);
@@ -273,6 +273,7 @@ export function TransactionsList() {
                 setPagination({ ...pagination, offset: 0 });
               }}
               className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg"
+              aria-label="Filter by transaction type"
             >
               <option value="all">All</option>
               <option value="income">Income</option>
@@ -291,6 +292,7 @@ export function TransactionsList() {
                 setPagination({ ...pagination, offset: 0 });
               }}
               className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg"
+              aria-label="Filter by category"
             >
               <option value="all">All Categories</option>
               {categories.map((cat) => (
@@ -313,6 +315,7 @@ export function TransactionsList() {
                 setPagination({ ...pagination, offset: 0 });
               }}
               className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg"
+              aria-label="Filter by start date"
             />
           </div>
 
@@ -328,6 +331,7 @@ export function TransactionsList() {
                 setPagination({ ...pagination, offset: 0 });
               }}
               className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg"
+              aria-label="Filter by end date"
             />
           </div>
         </div>
@@ -342,6 +346,7 @@ export function TransactionsList() {
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg"
+                aria-label="Sort transactions by"
               >
                 <option value="date">Date</option>
                 <option value="amount">Amount</option>
@@ -356,6 +361,7 @@ export function TransactionsList() {
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
                 className="px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg"
+                aria-label="Sort order"
               >
                 <option value="desc">Descending</option>
                 <option value="asc">Ascending</option>
@@ -418,6 +424,7 @@ export function TransactionsList() {
                   value={bulkAction}
                   onChange={(e) => setBulkAction(e.target.value)}
                   className="px-3 py-2 text-sm border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg"
+                  aria-label="Bulk action for selected transactions"
                 >
                   <option value="">Select Action...</option>
                   <option value="delete">Delete Selected</option>
@@ -428,6 +435,7 @@ export function TransactionsList() {
                     value={bulkCategory}
                     onChange={(e) => setBulkCategory(e.target.value)}
                     className="px-3 py-2 text-sm border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg"
+                    aria-label="Category for bulk categorization"
                   >
                     <option value="">Select Category...</option>
                     {categories.map((cat) => (
@@ -487,7 +495,8 @@ export function TransactionsList() {
                     }
                     setSelectedIds(newIds);
                   }}
-                  className="w-4 h-4 rounded border-gray-300 mr-2"
+                  className="w-4 h-4 rounded border-gray-300"
+                  aria-label={`Select transaction ${t.description || t.category}`}
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
@@ -544,6 +553,7 @@ export function TransactionsList() {
                       onClick={() => handleDelete(t.id)}
                       disabled={deletingId === t.id}
                       className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                      aria-label="Delete transaction"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -571,6 +581,7 @@ export function TransactionsList() {
                   }
                   disabled={pagination.offset === 0}
                   className="p-2 border border-gray-300 dark:border-slate-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                  aria-label="Previous page"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -583,6 +594,7 @@ export function TransactionsList() {
                   }
                   disabled={!pagination.hasMore}
                   className="p-2 border border-gray-300 dark:border-slate-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                  aria-label="Next page"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>

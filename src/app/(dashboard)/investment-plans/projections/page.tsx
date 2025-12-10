@@ -76,8 +76,7 @@ function InvestmentProjectionsContent() {
     annualReturnMin: number,
     annualReturnMax: number,
     years: number,
-    annualIncreasePercent: number,
-    compoundingFrequency: string
+    annualIncreasePercent: number
   ) => {
     const months = years * 12;
     const monthlyReturnMin = annualReturnMin / 100 / 12;
@@ -90,8 +89,8 @@ function InvestmentProjectionsContent() {
       let currentMonthlyContribution = monthlyContribution;
 
       for (let month = 1; month <= months; month++) {
-        // Apply annual increase every 12 months
-        if (month > 1 && (month - 1) % 12 === 0) {
+        // Apply annual increase at the start of each year (month 13, 25, 37, etc.)
+        if (month > 12 && (month - 1) % 12 === 0) {
           currentMonthlyContribution *= 1 + annualIncreasePercent / 100;
         }
 
@@ -141,8 +140,7 @@ function InvestmentProjectionsContent() {
         plan.expectedReturnMin || 0,
         plan.expectedReturnMax || plan.expectedReturnMin || 0,
         timeHorizon,
-        plan.annualIncreasePercent || 0,
-        plan.compoundingFrequency || "monthly"
+        plan.annualIncreasePercent || 0
       );
 
       projectionMin.forEach((point, index) => {
@@ -202,14 +200,14 @@ function InvestmentProjectionsContent() {
     );
   };
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ color: string; name: string; value: number; payload: { year: number; valueMin?: number; valueMax?: number } }> }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-3 shadow-lg">
           <p className="font-semibold text-gray-900 dark:text-white mb-2">
             Year {payload[0].payload.year}
           </p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {entry.name}: {formatCurrency(entry.value)}
             </p>
@@ -341,6 +339,7 @@ function InvestmentProjectionsContent() {
                     }
                   }}
                   className="w-20 px-3 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg text-sm"
+                  aria-label="Custom projection years"
                 />
                 <span className="text-sm text-gray-600 dark:text-gray-400">years</span>
               </div>

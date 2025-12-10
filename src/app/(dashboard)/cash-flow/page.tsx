@@ -23,14 +23,41 @@ interface CashFlowProjection {
   balance: number;
   cumulativeBalance: number;
   totalContributed?: number; // invested amount without interest
-  projectedInvestmentValue?: number; // invested value with growth
+  totalInvestmentValue?: number; // invested value with growth
+  projectedInvestmentValue?: number; // invested value with growth (alias)
+}
+
+interface InvestmentPlan {
+  id: string;
+  monthlyContribution: number;
+  annualIncreasePercent?: number;
+  startDate?: string;
+  startedMonthsAgo?: number;
+}
+
+interface RecurringTransaction {
+  id: string;
+  transactionData: string;
+  frequency: string;
+  nextDueDate: string;
+  isActive: boolean;
+  title?: string;
+}
+
+interface Transaction {
+  id: string;
+  amount: number;
+  type: string;
+  date: string;
+  category?: string;
+  description?: string;
 }
 
 function CashFlowPageContent() {
   const [salary, setSalary] = useState<number>(0);
   const [averageExpenses, setAverageExpenses] = useState<number>(0);
-  const [investmentPlans, setInvestmentPlans] = useState<any[]>([]);
-  const [recurringTransactions, setRecurringTransactions] = useState<any[]>([]);
+  const [investmentPlans, setInvestmentPlans] = useState<InvestmentPlan[]>([]);
+  const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
   const [projectionMonths, setProjectionMonths] = useState<number>(12);
   const [includeRecurring, setIncludeRecurring] = useState<boolean>(true);
   const [loading, setLoading] = useState(true);
@@ -60,7 +87,7 @@ function CashFlowPageContent() {
           const transactionsData = await transactionsRes.json();
           if (transactionsData.success) {
             const payload = transactionsData.data;
-            const list = Array.isArray(payload)
+            const list: Transaction[] = Array.isArray(payload)
               ? payload
               : Array.isArray(payload?.transactions)
               ? payload.transactions
@@ -70,7 +97,7 @@ function CashFlowPageContent() {
             const now = new Date();
             const threeMonthsAgo = addMonths(now, -3);
             const recentExpenses = list.filter(
-              (t: any) =>
+              (t) =>
                 t.type === "expense" &&
                 new Date(t.date) >= threeMonthsAgo &&
                 new Date(t.date) <= now
@@ -78,21 +105,21 @@ function CashFlowPageContent() {
 
             if (recentExpenses.length > 0) {
               const totalExpenses = recentExpenses.reduce(
-                (sum: number, t: any) => sum + t.amount,
+                (sum, t) => sum + t.amount,
                 0
               );
               const months = 3;
               setAverageExpenses(totalExpenses / months);
             } else {
               // Fallback: calculate from all expenses
-              const allExpenses = list.filter((t: any) => t.type === "expense");
+              const allExpenses = list.filter((t) => t.type === "expense");
               if (allExpenses.length > 0) {
                 const totalExpenses = allExpenses.reduce(
-                  (sum: number, t: any) => sum + t.amount,
+                  (sum, t) => sum + t.amount,
                   0
                 );
                 const oldestDate = new Date(
-                  Math.min(...allExpenses.map((t: any) => new Date(t.date).getTime()))
+                  Math.min(...allExpenses.map((t) => new Date(t.date).getTime()))
                 );
                 const months = Math.max(
                   1,
@@ -207,15 +234,17 @@ function CashFlowPageContent() {
     // Project month by month (contribution may increase yearly by avgAnnualIncrease)
     let projectedFutureValue = 0;
     let totalProjectedContributions = 0;
+    let currentMonthlyContribution = totalMonthlyInvestments;
 
     for (let m = 0; m < projectionMonths; m++) {
-      const yearIndex = Math.floor(m / 12);
-      const multiplier = Math.pow(1 + avgAnnualIncrease, yearIndex);
-      const monthlyContributionThisMonth = totalMonthlyInvestments * multiplier;
+      // Apply annual increase at the start of each year (month 12, 24, 36, etc.)
+      if (m > 0 && m % 12 === 0) {
+        currentMonthlyContribution *= 1 + avgAnnualIncrease;
+      }
 
-      // futureValue accumulation: existing value grows, then new contribution added
-      projectedFutureValue = projectedFutureValue * (1 + monthlyReturn) + monthlyContributionThisMonth;
-      totalProjectedContributions += monthlyContributionThisMonth;
+      // futureValue accumulation: add contribution first, then apply growth
+      projectedFutureValue = (projectedFutureValue + currentMonthlyContribution) * (1 + monthlyReturn);
+      totalProjectedContributions += currentMonthlyContribution;
     }
 
     return {
@@ -253,26 +282,27 @@ function CashFlowPageContent() {
 
     // cumulative contributed (no interest) starts with invested to date
     let cumulativeContributed = totalInvestedToDate;
+    let currentMonthlyInvestments = totalMonthlyInvestments;
 
     for (let i = 0; i < projectionMonths; i++) {
       const monthDate = addMonths(startDate, i);
       const monthKey = format(monthDate, "MMM yyyy");
 
+      // Apply annual increase at the start of each year (month 12, 24, 36, etc.)
+      if (i > 0 && i % 12 === 0) {
+        currentMonthlyInvestments *= 1 + avgAnnualIncrease;
+      }
+
       const monthlyIncome = salary + recurringAmounts.income;
       const monthlyExpenses = averageExpenses + recurringAmounts.expense;
 
-      // Monthly investments may increase annually by avgAnnualIncrease on each plan
-      const yearIndex = Math.floor(i / 12);
-      const multiplier = Math.pow(1 + avgAnnualIncrease, yearIndex);
-      const monthlyInvestments = totalMonthlyInvestments * multiplier;
-
-      // update projectedInvestmentValue (with interest)
-      projectedInvestmentValue = projectedInvestmentValue * (1 + monthlyReturn) + monthlyInvestments;
+      // update projectedInvestmentValue (with interest): add contribution first, then apply growth
+      projectedInvestmentValue = (projectedInvestmentValue + currentMonthlyInvestments) * (1 + monthlyReturn);
 
       // update cumulativeContributed (without interest)
-      cumulativeContributed += monthlyInvestments;
+      cumulativeContributed += currentMonthlyInvestments;
 
-      const netCashFlow = monthlyIncome - monthlyExpenses - monthlyInvestments;
+      const netCashFlow = monthlyIncome - monthlyExpenses - currentMonthlyInvestments;
 
       cumulativeBalance += netCashFlow;
 
@@ -280,11 +310,11 @@ function CashFlowPageContent() {
         month: monthKey,
         income: roundToDecimal(monthlyIncome),
         expenses: roundToDecimal(monthlyExpenses),
-        investments: roundToDecimal(monthlyInvestments),
+        investments: roundToDecimal(currentMonthlyInvestments),
         balance: roundToDecimal(netCashFlow),
         cumulativeBalance: roundToDecimal(cumulativeBalance),
         totalContributed: roundToDecimal(cumulativeContributed),
-        projectedInvestmentValue: roundToDecimal(projectedInvestmentValue),
+        totalInvestmentValue: roundToDecimal(projectedInvestmentValue),
       });
     }
 
@@ -352,6 +382,7 @@ function CashFlowPageContent() {
                 value={expectedAnnualReturn}
                 onChange={(e) => setExpectedAnnualReturn(Number(e.target.value))}
                 className="mt-1 block w-40 rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-2"
+                aria-label="Expected annual return percentage"
               />
             </div>
           </div>
@@ -477,8 +508,8 @@ function CashFlowPageContent() {
                 </tr>
               </thead>
               <tbody>
-                {recurringTransactions.map((rt: any, idx: number) => {
-                  let parsed: any = null;
+                {recurringTransactions.map((rt, idx: number) => {
+                  let parsed: { title?: string; amount?: number; type?: string } = { title: "-", amount: 0, type: "expense" };
                   try {
                     parsed = JSON.parse(rt.transactionData);
                   } catch {
