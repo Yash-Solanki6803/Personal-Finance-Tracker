@@ -47,8 +47,15 @@ export async function GET(request: NextRequest) {
     const income = transactions.filter((t) => t.type === "income");
     const expense = transactions.filter((t) => t.type === "expense");
 
+    // Filter out income transactions with savings categories for budget calculations
+    const budgetIncome = income.filter((t) => {
+      const classification = getCategoryClassification(t.category);
+      return classification !== "savings";
+    });
+
     // Calculate totals
-    const totalIncome = sumAmounts(income);
+    const totalIncome = sumAmounts(income); // Total income including savings transfers
+    const budgetTotalIncome = sumAmounts(budgetIncome); // Income for budget calculations (excluding savings)
     const totalExpense = sumAmounts(expense);
     const netSavings = totalIncome - totalExpense;
 
@@ -93,27 +100,27 @@ export async function GET(request: NextRequest) {
       { budget: number; actual: number; percentage: number }
     > = {};
 
-    if (budgetRule && totalIncome > 0) {
-      const needsBudget = (budgetRule.needsPercent / 100) * totalIncome;
-      const wantsBudget = (budgetRule.wantsPercent / 100) * totalIncome;
-      const savingsBudget = (budgetRule.savingsPercent / 100) * totalIncome;
+    if (budgetRule && budgetTotalIncome > 0) {
+      const needsBudget = (budgetRule.needsPercent / 100) * budgetTotalIncome;
+      const wantsBudget = (budgetRule.wantsPercent / 100) * budgetTotalIncome;
+      const savingsBudget = (budgetRule.savingsPercent / 100) * budgetTotalIncome;
 
       budgetAllocation.needs = {
         budget: needsBudget,
         actual: needsActual,
-        percentage: totalIncome > 0 ? (needsActual / totalIncome) * 100 : 0,
+        percentage: budgetTotalIncome > 0 ? (needsActual / budgetTotalIncome) * 100 : 0,
       };
 
       budgetAllocation.wants = {
         budget: wantsBudget,
         actual: wantsActual,
-        percentage: totalIncome > 0 ? (wantsActual / totalIncome) * 100 : 0,
+        percentage: budgetTotalIncome > 0 ? (wantsActual / budgetTotalIncome) * 100 : 0,
       };
 
       budgetAllocation.savings = {
         budget: savingsBudget,
         actual: savingsActual,
-        percentage: totalIncome > 0 ? (savingsActual / totalIncome) * 100 : 0,
+        percentage: budgetTotalIncome > 0 ? (savingsActual / budgetTotalIncome) * 100 : 0,
       };
     }
 
