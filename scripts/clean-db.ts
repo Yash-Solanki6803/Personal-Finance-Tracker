@@ -26,6 +26,9 @@ async function cleanDatabase() {
     await prisma.goal.deleteMany({});
     console.log("✓ Deleted all goals");
 
+    await prisma.auditLog.deleteMany({});
+    console.log("✓ Deleted all audit logs");
+
     // Categories are global, keep them
     // await prisma.category.deleteMany({});
 

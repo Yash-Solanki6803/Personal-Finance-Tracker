@@ -5,10 +5,10 @@ export const TransactionSchema = z.object({
   amount: z.number().positive("Amount must be positive"),
   category: z.string().min(1, "Category is required"),
   type: z.string().refine(
-    (val) => ["income", "expense"].includes(val),
-    "Type must be 'income' or 'expense'"
+    (val) => ["income", "expense", "investment", "transfer"].includes(val),
+    "Type must be 'income', 'expense', 'investment', or 'transfer'"
   ),
-  date: z.string().min(1, "Date is required"),
+  date: z.union([z.string(), z.date()]),
   description: z.string().optional(),
   recurringId: z.string().optional(),
 });
@@ -30,8 +30,8 @@ export const InvestmentPlanSchema = z.object({
     "Compounding frequency must be 'monthly', 'quarterly', or 'annually'"
   ),
   annualIncreasePercent: z.number().min(0, "Annual increase must be >= 0"),
-  startDate: z.date(),
-  endDate: z.date().optional(),
+  startDate: z.union([z.string(), z.date()]),
+  endDate: z.union([z.string(), z.date()]).optional(),
   status: z.string().refine(
     (val) => ["active", "paused", "archived"].includes(val),
     "Status must be 'active', 'paused', or 'archived'"
@@ -98,10 +98,7 @@ export const RecurringTransactionSchema = z.object({
     (val) => ["once", "daily", "weekly", "monthly", "yearly"].includes(val),
     "Frequency must be 'once', 'daily', 'weekly', 'monthly', or 'yearly'"
   ),
-  nextDueDate: z.union([z.date(), z.string()]).transform((val) => {
-    if (typeof val === "string") return new Date(val);
-    return val;
-  }),
+  nextDueDate: z.union([z.string(), z.date()]),
   isActive: z.boolean().default(true),
 });
 
@@ -116,8 +113,8 @@ export type RecurringTransaction = z.infer<typeof RecurringTransactionSchema> & 
 export const CategorySchema = z.object({
   name: z.string().min(1, "Category name is required").max(255),
   type: z.string().refine(
-    (val) => ["expense", "income", "savings", "investment"].includes(val),
-    "Type must be 'expense', 'income', 'savings', or 'investment'"
+    (val) => ["income", "expense", "investment", "transfer"].includes(val),
+    "Type must be 'income', 'expense', 'investment', or 'transfer'"
   ),
 });
 
@@ -128,12 +125,12 @@ export type Category = z.infer<typeof CategorySchema> & { id: string };
 // Salary validation schema
 export const SalaryInputSchema = z.object({
   amount: z.number().positive("Salary amount must be positive"),
-  lastUpdatedDate: z.union([z.date(), z.string()]),
+  lastUpdatedDate: z.union([z.string(), z.date()]),
 });
 
 export const SalarySchema = z.object({
   amount: z.number().positive("Salary amount must be positive"),
-  lastUpdatedDate: z.coerce.date(),
+  lastUpdatedDate: z.union([z.string(), z.date()]),
 });
 
 export const SalaryUpdateSchema = SalaryInputSchema.partial();
@@ -144,7 +141,7 @@ export type Salary = z.infer<typeof SalarySchema> & { id: string };
 export const GoalInputSchema = z.object({
   name: z.string().min(1, "Goal name is required").max(255).optional(),
   targetAmount: z.number().positive("Target amount must be positive").optional(),
-  targetDate: z.union([z.date(), z.string()]).optional(),
+  targetDate: z.union([z.string(), z.date()]).optional(),
   description: z.string().optional(),
   status: z.string().refine(
     (val) => ["on_track", "behind", "completed"].includes(val),
@@ -155,7 +152,7 @@ export const GoalInputSchema = z.object({
 export const GoalSchema = z.object({
   name: z.string().min(1, "Goal name is required").max(255),
   targetAmount: z.number().positive("Target amount must be positive"),
-  targetDate: z.coerce.date(),
+  targetDate: z.union([z.string(), z.date()]),
   description: z.string().optional(),
   status: z.string().refine(
     (val) => ["on_track", "behind", "completed"].includes(val),

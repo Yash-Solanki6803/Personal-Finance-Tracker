@@ -97,6 +97,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Write audit log entry
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        eventType: "salary_updated",
+        details: JSON.stringify({ salaryId: salary.id, amount: salary.amount, date: salary.lastUpdatedDate }),
+      },
+    });
     return successResponse(salary, "Salary updated successfully", 201);
   } catch (error) {
     if (error instanceof Error && "errors" in error) {

@@ -104,6 +104,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Write audit log entry
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        eventType: "transaction_created",
+        details: JSON.stringify({ transactionId: transaction.id, amount: transaction.amount, type: transaction.type, date: transaction.date }),
+      },
+    });
+
     return successResponse(transaction, "Transaction created successfully", 201);
   } catch (error) {
     if (error instanceof Error && "errors" in error) {

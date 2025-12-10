@@ -1,3 +1,10 @@
+model AuditLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  eventType String   // e.g. 'transaction_created', 'salary_credited', 'recurring_processed'
+  details   String   // JSON string for event details
+  createdAt DateTime @default(now())
+}
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -32,7 +39,7 @@ model User {
 model Category {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String   @unique
-  type      String   // income, expense
+  type      String   // income, expense, investment, transfer
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -45,7 +52,7 @@ model Transaction {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   amount    Float
   category  String
-  type      String   // income, expense
+  type      String   // income, expense, investment, transfer
   date      DateTime
   description String?
   recurringId String?

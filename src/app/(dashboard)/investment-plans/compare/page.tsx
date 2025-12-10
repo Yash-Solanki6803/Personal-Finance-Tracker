@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ProtectedPage } from "@/components/ProtectedPage";
 import InvestmentPlanCompare from "@/components/InvestmentPlanCompare";
+import { toast } from "sonner";
 
 export default function InvestmentPlansComparePage() {
   const router = useRouter();

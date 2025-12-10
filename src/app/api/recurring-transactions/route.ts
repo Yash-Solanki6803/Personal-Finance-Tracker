@@ -71,6 +71,18 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Parse transaction data for audit log
+    const parsedTransactionData = JSON.parse(transaction.transactionData);
+
+    // Write audit log entry
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        eventType: "recurring_created",
+        details: JSON.stringify({ recurringId: transaction.id, amount: parsedTransactionData.amount, frequency: transaction.frequency, nextDueDate: transaction.nextDueDate }),
+      },
+    });
+
     return successResponse(
       transaction,
       "Recurring transaction created successfully",

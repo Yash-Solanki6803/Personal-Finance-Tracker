@@ -35,7 +35,16 @@ export async function GET(request: NextRequest) {
       orderBy: { targetDate: "asc" },
     });
 
-    return successResponse(goals, "Goals retrieved successfully");
+    // Attach backend-driven progress to each goal
+    const { getGoalProgress } = await import("@/lib/financial-calculations");
+    const goalsWithProgress = await Promise.all(
+      goals.map(async (goal) => ({
+        ...goal,
+        progress: await getGoalProgress(userId, goal.id),
+      }))
+    );
+
+    return successResponse(goalsWithProgress, "Goals retrieved successfully");
   } catch (error) {
     return handleApiError(error, "GET /api/goals");
   }

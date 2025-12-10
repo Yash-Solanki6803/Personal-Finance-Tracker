@@ -13,8 +13,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
-import { useMemo } from "react";
 import { toast } from "sonner";
+
+// import useFinancialCalculations from "@/hooks/useFinancialCalculations";
 
 interface MonthlySummary {
   totalIncome: number;
@@ -40,6 +41,7 @@ interface MonthlySummary {
 
 function DashboardContent() {
   const [summary, setSummary] = useState<MonthlySummary | null>(null);
+  const [dashboardSummary, setDashboardSummary] = useState<{ bankBalance: number; minNetWorth: number; maxNetWorth: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [investmentPlans, setInvestmentPlans] = useState<any[]>([]);
@@ -88,8 +90,9 @@ function DashboardContent() {
         const year = today.getFullYear();
         const dateParam = `${year}-${month}`;
 
-        const [summaryRes, plansRes, transactionsRes, salaryRes] = await Promise.all([
+        const [summaryRes, dashboardRes, plansRes, transactionsRes, salaryRes] = await Promise.all([
           fetch(`/api/analytics/monthly-summary?month=${dateParam}`),
+          fetch("/api/dashboard/summary"),
           fetch("/api/investment-plans?status=active"),
           fetch("/api/transactions?limit=1000"),
           fetch("/api/salary/history"),
@@ -99,6 +102,13 @@ function DashboardContent() {
           const summaryData = await summaryRes.json();
           if (summaryData.success) {
             setSummary(summaryData.data);
+          }
+        }
+
+        if (dashboardRes.ok) {
+          const dashboardData = await dashboardRes.json();
+          if (dashboardData.success) {
+            setDashboardSummary(dashboardData.data);
           }
         }
 
@@ -188,15 +198,32 @@ function DashboardContent() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Total Income */}
+        {/* Bank Balance */}
         <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
-                Total Income
+                Bank Balance
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-                {formatCurrency(summary.totalIncome)}
+                {dashboardSummary ? formatCurrency(dashboardSummary.bankBalance) : "-"}
+              </p>
+            </div>
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <Wallet className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Min Net Worth */}
+        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
+                Min Net Worth
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
+                {dashboardSummary ? formatCurrency(dashboardSummary.minNetWorth) : "-"}
               </p>
             </div>
             <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
@@ -205,36 +232,19 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* Total Expense */}
+        {/* Max Net Worth */}
         <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
-                Total Expense
+                Max Net Worth
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-                {formatCurrency(summary.totalExpense)}
+                {dashboardSummary ? formatCurrency(dashboardSummary.maxNetWorth) : "-"}
               </p>
             </div>
-            <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
-              <TrendingDown className="w-6 h-6 text-red-600 dark:text-red-400" />
-            </div>
-          </div>
-        </div>
-
-        {/* Net Savings */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
-                Net Savings
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-                {formatCurrency(summary.netSavings)}
-              </p>
-            </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <Wallet className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+              <PieChartIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
           </div>
         </div>
@@ -247,7 +257,7 @@ function DashboardContent() {
                 Transactions
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-                {summary.transactionCount}
+                {summary ? summary.transactionCount : "-"}
               </p>
             </div>
             <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
@@ -290,66 +300,8 @@ function DashboardContent() {
         </div>
       )}
 
-      {/* Net Worth Timeline */}
-      {(() => {
-        if (transactions.length === 0 || investmentPlans.length === 0) return null;
-
-        // Calculate monthly transactions
-        const monthlyData: Record<string, { income: number; expense: number }> = {};
-        transactions.forEach((t: any) => {
-          const monthKey = new Date(t.date).toISOString().substring(0, 7);
-          if (!monthlyData[monthKey]) {
-            monthlyData[monthKey] = { income: 0, expense: 0 };
-          }
-          if (t.type === "income") {
-            monthlyData[monthKey].income += t.amount;
-          } else {
-            monthlyData[monthKey].expense += t.amount;
-          }
-        });
-
-        // Calculate investment value (simplified - using current year projection)
-        const totalMonthlyContribution = investmentPlans.reduce(
-          (sum, plan) => sum + (plan.monthlyContribution || 0),
-          0
-        );
-        const months = Object.keys(monthlyData).sort();
-        const netWorthData = months.map((month, index) => {
-          const data = monthlyData[month];
-          const cumulativeCash = months.slice(0, index + 1).reduce(
-            (sum, m) => sum + (monthlyData[m].income - monthlyData[m].expense),
-            0
-          );
-          // Simplified investment calculation (assuming 10% annual return)
-          const investmentValue = totalMonthlyContribution * (index + 1) * 1.1;
-          return {
-            month: new Date(month + "-01").toLocaleDateString("en-US", { month: "short", year: "numeric" }),
-            cash: cumulativeCash,
-            investments: investmentValue,
-            netWorth: cumulativeCash + investmentValue,
-          };
-        });
-
-        return netWorthData.length > 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-              Net Worth Timeline
-            </h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={netWorthData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                <Legend />
-                <Line type="monotone" dataKey="cash" stroke="#3b82f6" name="Cash" />
-                <Line type="monotone" dataKey="investments" stroke="#10b981" name="Investments" />
-                <Line type="monotone" dataKey="netWorth" stroke="#8b5cf6" strokeWidth={2} name="Net Worth" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        ) : null;
-      })()}
+      {/* Net Worth Timeline (backend-driven) */}
+      <NetWorthTimelineChart />
 
       {/* Salary History Trend (Mini Chart) */}
       {salaryHistory.length > 1 && (
@@ -438,6 +390,58 @@ function DashboardContent() {
 
       {/* Recent Transactions */}
       <RecentTransactions />
+    </div>
+  );
+}
+
+// Net Worth Timeline Chart Component
+function NetWorthTimelineChart() {
+  const [timeline, setTimeline] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTimeline = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch("/api/dashboard/net-worth-timeline");
+        if (!res.ok) throw new Error("Failed to fetch net worth timeline");
+        const body = await res.json();
+        if (body.success && Array.isArray(body.data)) {
+          setTimeline(body.data);
+        } else {
+          throw new Error(body.message || "Invalid response");
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTimeline();
+  }, []);
+
+  if (loading) return <div className="my-8 text-gray-500 dark:text-gray-400">Loading net worth timeline...</div>;
+  if (error) return <div className="my-8 text-red-600 dark:text-red-400">{error}</div>;
+  if (!timeline.length) return null;
+
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6 my-8">
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Net Worth Timeline</h2>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={timeline}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="month" />
+          <YAxis tickFormatter={(value) => formatCurrency(value)} />
+          <Tooltip formatter={(value) => formatCurrency(value as number)} />
+          <Legend />
+          <Line type="monotone" dataKey="cash" stroke="#3b82f6" name="Cash" />
+          <Line type="monotone" dataKey="investmentsMin" stroke="#10b981" name="Investments (Min)" />
+          <Line type="monotone" dataKey="investmentsMax" stroke="#22d3ee" name="Investments (Max)" />
+          <Line type="monotone" dataKey="netWorthMin" stroke="#8b5cf6" strokeWidth={2} name="Net Worth (Min)" />
+          <Line type="monotone" dataKey="netWorthMax" stroke="#f59e42" strokeWidth={2} name="Net Worth (Max)" />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }
