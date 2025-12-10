@@ -159,7 +159,7 @@ function DashboardContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="text-gray-500 dark:text-gray-400">
+        <div className="text-muted-foreground">
           Loading dashboard...
         </div>
       </div>
@@ -168,7 +168,7 @@ function DashboardContent() {
 
   if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-800 dark:text-red-200">
+      <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 text-destructive">
         {error}
       </div>
     );
@@ -176,7 +176,7 @@ function DashboardContent() {
 
   if (!summary) {
     return (
-      <div className="text-gray-500 dark:text-gray-400">
+      <div className="text-muted-foreground">
         No data available for this month
       </div>
     );
@@ -187,17 +187,17 @@ function DashboardContent() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-foreground">
             Dashboard
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-muted-foreground mt-2">
             Welcome back! Here's your financial overview.
           </p>
         </div>
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-medium transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 disabled:bg-primary/50 text-primary-foreground rounded-lg font-medium transition-colors"
         >
           <Download className="w-4 h-4" />
           {exporting ? "Exporting..." : "Export to XLSX"}
@@ -207,69 +207,69 @@ function DashboardContent() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Bank Balance */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
+        <div className="bg-card rounded-lg border border-border p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
+              <p className="text-muted-foreground text-sm font-medium">
                 Bank Balance
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
+              <p className="text-2xl font-bold text-card-foreground mt-2">
                 {dashboardSummary ? formatCurrency(dashboardSummary.bankBalance) : "-"}
               </p>
             </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <Wallet className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="p-3 bg-primary/10 rounded-lg">
+              <Wallet className="w-6 h-6 text-primary" />
             </div>
           </div>
         </div>
 
         {/* Min Net Worth */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
+        <div className="bg-card rounded-lg border border-border p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
+              <p className="text-muted-foreground text-sm font-medium">
                 Min Net Worth
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
+              <p className="text-2xl font-bold text-card-foreground mt-2">
                 {dashboardSummary ? formatCurrency(dashboardSummary.minNetWorth) : "-"}
               </p>
             </div>
-            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <div className="p-3 bg-success/10 rounded-lg">
+              <TrendingUp className="w-6 h-6 text-success" />
             </div>
           </div>
         </div>
 
         {/* Max Net Worth */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
+        <div className="bg-card rounded-lg border border-border p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
+              <p className="text-muted-foreground text-sm font-medium">
                 Max Net Worth
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
+              <p className="text-2xl font-bold text-card-foreground mt-2">
                 {dashboardSummary ? formatCurrency(dashboardSummary.maxNetWorth) : "-"}
               </p>
             </div>
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-              <PieChartIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            <div className="p-3 bg-accent rounded-lg">
+              <PieChartIcon className="w-6 h-6 text-accent-foreground" />
             </div>
           </div>
         </div>
 
         {/* Transaction Count */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
+        <div className="bg-card rounded-lg border border-border p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
+              <p className="text-muted-foreground text-sm font-medium">
                 Transactions
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
+              <p className="text-2xl font-bold text-card-foreground mt-2">
                 {summary ? summary.transactionCount : "-"}
               </p>
             </div>
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-              <PieChartIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            <div className="p-3 bg-accent rounded-lg">
+              <PieChartIcon className="w-6 h-6 text-accent-foreground" />
             </div>
           </div>
         </div>
@@ -277,8 +277,8 @@ function DashboardContent() {
 
       {/* Income/Expense/Savings Pie Chart */}
       {summary && (
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+        <div className="bg-card rounded-lg border border-border p-6">
+          <h2 className="text-xl font-bold text-card-foreground mb-6">
             Monthly Overview
           </h2>
           <ResponsiveContainer width="100%" height={300}>
@@ -313,8 +313,8 @@ function DashboardContent() {
 
       {/* Salary History Trend (Mini Chart) */}
       {salaryHistory.length > 1 && (
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+        <div className="bg-card rounded-lg border border-border p-6">
+          <h2 className="text-xl font-bold text-card-foreground mb-6">
             Salary History Trend
           </h2>
           <ResponsiveContainer width="100%" height={200}>
@@ -337,8 +337,8 @@ function DashboardContent() {
       )}
 
       {/* Budget Allocation */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+      <div className="bg-card rounded-lg border border-border p-6">
+        <h2 className="text-xl font-bold text-card-foreground mb-6">
           Budget Allocation (50-30-20)
         </h2>
 
@@ -347,26 +347,26 @@ function DashboardContent() {
             ([category, data]) => (
               <div key={category}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-700 dark:text-gray-300 font-medium capitalize">
+                  <span className="text-foreground font-medium capitalize">
                     {category}
                   </span>
-                  <span className="text-gray-600 dark:text-gray-400 text-sm">
+                  <span className="text-muted-foreground text-sm">
                     {formatCurrency(data.actual)} / {formatCurrency(data.budget)}
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
+                <div className="w-full bg-muted rounded-full h-2">
                   <div
                     className={`h-2 rounded-full transition-all ${
                       data.actual <= data.budget
-                        ? "bg-green-500"
-                        : "bg-red-500"
+                        ? "bg-success"
+                        : "bg-destructive"
                     }`}
                     style={{
                       width: `${Math.min((data.actual / data.budget) * 100, 100)}%`,
                     }}
                   />
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {formatPercentage(data.percentage / 100)} of budget
                 </p>
               </div>
@@ -376,21 +376,21 @@ function DashboardContent() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+      <div className="bg-card rounded-lg border border-border p-6">
+        <h2 className="text-xl font-bold text-card-foreground mb-4">
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Link href="/transactions/new" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-center">
+          <Link href="/transactions/new" className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-colors text-center">
             + Add Transaction
           </Link>
-          <Link href="/investment-plans/new" className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-center">
+          <Link href="/investment-plans/new" className="px-4 py-2 bg-success hover:bg-success/90 text-success-foreground rounded-lg font-medium transition-colors text-center">
             + Investment Plan
           </Link>
-          <Link href="/goals/new" className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors text-center">
+          <Link href="/goals/new" className="px-4 py-2 bg-accent hover:bg-accent/90 text-accent-foreground rounded-lg font-medium transition-colors text-center">
             + Goal
           </Link>
-          <button className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors" disabled>
+          <button className="px-4 py-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-lg font-medium transition-colors" disabled>
             View Reports
           </button>
         </div>
@@ -429,13 +429,13 @@ function NetWorthTimelineChart() {
     fetchTimeline();
   }, []);
 
-  if (loading) return <div className="my-8 text-gray-500 dark:text-gray-400">Loading net worth timeline...</div>;
-  if (error) return <div className="my-8 text-red-600 dark:text-red-400">{error}</div>;
+  if (loading) return <div className="my-8 text-muted-foreground">Loading net worth timeline...</div>;
+  if (error) return <div className="my-8 text-destructive">{error}</div>;
   if (!timeline.length) return null;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6 my-8">
-      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Net Worth Timeline</h2>
+    <div className="bg-card rounded-lg border border-border p-6 my-8">
+      <h2 className="text-xl font-bold text-card-foreground mb-6">Net Worth Timeline</h2>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={timeline}>
           <CartesianGrid strokeDasharray="3 3" />

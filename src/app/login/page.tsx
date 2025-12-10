@@ -52,9 +52,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-950 dark:to-slate-900">
-      <div className="w-full max-w-md p-8 bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-800">
-        <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-full max-w-md p-8 bg-card rounded-lg shadow-lg border border-border">
+        <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent mb-6">
           FinTrack
         </h1>
 
@@ -62,7 +62,7 @@ export default function LoginPage() {
           <div>
             <label
               htmlFor="username"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              className="block text-sm font-medium text-foreground mb-2"
             >
               Username
             </label>
@@ -73,7 +73,7 @@ export default function LoginPage() {
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter your username"
               disabled={loading}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:opacity-50"
+              className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
               required
             />
           </div>
@@ -81,7 +81,7 @@ export default function LoginPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              className="block text-sm font-medium text-foreground mb-2"
             >
               Master Password
             </label>
@@ -92,13 +92,13 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your master password"
               disabled={loading}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:opacity-50"
+              className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
               required
             />
           </div>
 
           {error && (
-            <div className="p-3 bg-red-100 dark:bg-red-950 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-200 rounded">
+            <div className="p-3 bg-destructive/10 border border-destructive/30 text-destructive rounded">
               {error}
             </div>
           )}
@@ -106,13 +106,13 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-medium rounded-lg disabled:opacity-50 transition-colors"
+            className="w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg disabled:opacity-50 transition-colors"
           >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
+        <p className="text-center text-sm text-muted-foreground mt-6">
           Multi-user finance tracking application. Each user has their own data.
         </p>
       </div>

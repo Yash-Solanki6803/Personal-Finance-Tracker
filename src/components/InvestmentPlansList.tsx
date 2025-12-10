@@ -29,7 +29,7 @@ export function InvestmentPlansList() {
   const fetchPlans = async () => {
     try {
       setLoading(true);
-      const url = statusFilter !== "all" 
+      const url = statusFilter !== "all"
         ? `/api/investment-plans?status=${statusFilter}`
         : "/api/investment-plans";
       const res = await fetch(url);
@@ -114,39 +114,39 @@ export function InvestmentPlansList() {
   const getStatusBadgeColor = (status: string | null | undefined) => {
     switch (status) {
       case "active":
-        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+        return "bg-success/20 text-success";
       case "paused":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
+        return "bg-warning/20 text-warning";
       case "archived":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+        return "bg-muted text-muted-foreground";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+        return "bg-muted text-muted-foreground";
     }
   };
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-        <div className="text-gray-500 dark:text-gray-400">Loading investment plans...</div>
+      <div className="bg-card rounded-lg border border-border p-6">
+        <div className="text-muted-foreground">Loading investment plans...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-        <div className="text-red-600 dark:text-red-400">{error}</div>
+      <div className="bg-card rounded-lg border border-border p-6">
+        <div className="text-destructive">{error}</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
+    <div className="bg-card rounded-lg border border-border p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Investment Plans</h2>
+        <h2 className="text-lg font-semibold text-card-foreground">Investment Plans</h2>
         <Link
           href="/investment-plans/new"
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+          className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-medium transition-colors"
         >
           + Add Plan
         </Link>
@@ -155,11 +155,11 @@ export function InvestmentPlansList() {
       {/* Status Filter */}
       <div className="mb-6">
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by status:</label>
+          <label className="text-sm font-medium text-foreground">Filter by status:</label>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg"
+            className="px-3 py-2 text-sm border border-input bg-card text-foreground rounded-lg"
           >
             <option value="all">All</option>
             <option value="active">Active</option>
@@ -170,7 +170,7 @@ export function InvestmentPlansList() {
       </div>
 
       {plans.length === 0 ? (
-        <p className="text-gray-600 dark:text-gray-400 text-center py-8">
+        <p className="text-muted-foreground text-center py-8">
           No investment plans found.
         </p>
       ) : (
@@ -178,11 +178,11 @@ export function InvestmentPlansList() {
           {plans.map((p) => (
             <div
               key={p.id}
-              className="p-5 rounded-lg bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 hover:shadow-md transition-shadow"
+              className="p-5 rounded-lg bg-secondary/50 border border-border hover:shadow-md transition-shadow"
             >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-1">
+                  <h3 className="font-semibold text-lg text-foreground mb-1">
                     {p.name}
                   </h3>
                   <div className="flex items-center gap-2 mb-2">
@@ -193,7 +193,7 @@ export function InvestmentPlansList() {
                     >
                       {p.status || "active"}
                     </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-xs text-muted-foreground">
                       {p.compoundingFrequency || "Monthly"}
                     </span>
                   </div>
@@ -202,23 +202,23 @@ export function InvestmentPlansList() {
 
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Monthly Contribution:</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
+                  <span className="text-muted-foreground">Monthly Contribution:</span>
+                  <span className="font-semibold text-foreground">
                     {formatCurrency(p.monthlyContribution || 0)}
                   </span>
                 </div>
                 {p.expectedReturnMin !== null && p.expectedReturnMin !== undefined && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Expected Return:</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">
+                    <span className="text-muted-foreground">Expected Return:</span>
+                    <span className="font-semibold text-foreground">
                       {p.expectedReturnMin}% - {p.expectedReturnMax || p.expectedReturnMin}%
                     </span>
                   </div>
                 )}
                 {p.startDate && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Start Date:</span>
-                    <span className="text-gray-900 dark:text-white">
+                    <span className="text-muted-foreground">Start Date:</span>
+                    <span className="text-foreground">
                       {new Date(p.startDate).toLocaleDateString()}
                     </span>
                   </div>
@@ -226,14 +226,14 @@ export function InvestmentPlansList() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-slate-700">
+              <div className="flex items-center justify-between pt-4 border-t border-border">
                 <div className="flex items-center gap-2">
                   {/* Status Change Buttons */}
                   {p.status === "active" && (
                     <button
                       onClick={() => handleStatusChange(p.id, "paused")}
                       disabled={updatingId === p.id}
-                      className="p-2 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition-colors disabled:opacity-50"
+                      className="p-2 text-warning hover:bg-warning/10 rounded-lg transition-colors disabled:opacity-50"
                       title="Pause"
                     >
                       <Pause className="w-4 h-4" />
@@ -243,7 +243,7 @@ export function InvestmentPlansList() {
                     <button
                       onClick={() => handleStatusChange(p.id, "active")}
                       disabled={updatingId === p.id}
-                      className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors disabled:opacity-50"
+                      className="p-2 text-success hover:bg-success/10 rounded-lg transition-colors disabled:opacity-50"
                       title="Resume"
                     >
                       <Play className="w-4 h-4" />
@@ -253,7 +253,7 @@ export function InvestmentPlansList() {
                     <button
                       onClick={() => handleStatusChange(p.id, "archived")}
                       disabled={updatingId === p.id}
-                      className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                      className="p-2 text-muted-foreground hover:bg-accent rounded-lg transition-colors disabled:opacity-50"
                       title="Archive"
                     >
                       <Archive className="w-4 h-4" />
@@ -263,14 +263,14 @@ export function InvestmentPlansList() {
                 <div className="flex items-center gap-2">
                   <Link
                     href={`/investment-plans/${p.id}/edit`}
-                    className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                    className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
                     title="Edit"
                   >
                     <Edit className="w-4 h-4" />
                   </Link>
                   <button
                     onClick={() => handleDuplicate(p.id)}
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    className="p-2 text-muted-foreground hover:bg-accent rounded-lg transition-colors"
                     title="Duplicate"
                   >
                     {/* simple duplicate icon using Archive as placeholder */}
@@ -279,7 +279,7 @@ export function InvestmentPlansList() {
                   <button
                     onClick={() => handleDelete(p.id)}
                     disabled={deletingId === p.id}
-                    className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                    className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50"
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />

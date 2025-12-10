@@ -96,30 +96,30 @@ function NewGoalForm() {
   return (
     <div className="max-w-2xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-3xl font-bold text-foreground">
           New Financial Goal
         </h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+        <p className="text-sm text-muted-foreground mt-2">
           Set a financial goal and calculate the required monthly SIP to achieve it.
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-8 space-y-6 shadow-sm"
+        className="bg-card rounded-lg border border-border p-8 space-y-6 shadow-sm"
       >
         {/* Goal Name */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Goal Name <span className="text-red-500">*</span>
+          <label className="block text-sm font-semibold text-foreground mb-2">
+            Goal Name <span className="text-destructive">*</span>
           </label>
           <input
             {...register("name")}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all"
+            className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring transition-all"
             placeholder="e.g., Buy a House, Retirement Fund"
           />
           {errors.name && (
-            <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+            <p className="text-xs text-destructive mt-1">
               {errors.name.message}
             </p>
           )}
@@ -128,36 +128,36 @@ function NewGoalForm() {
         {/* Target Amount and Date Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Target Amount <span className="text-red-500">*</span>
+            <label className="block text-sm font-semibold text-foreground mb-2">
+              Target Amount <span className="text-destructive">*</span>
             </label>
             <input
               type="number"
               step="0.01"
               {...register("targetAmount", { valueAsNumber: true })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all"
+              className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring transition-all"
               placeholder="0.00"
             />
             {errors.targetAmount && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+              <p className="text-xs text-destructive mt-1">
                 {errors.targetAmount.message}
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Target Date <span className="text-red-500">*</span>
+            <label className="block text-sm font-semibold text-foreground mb-2">
+              Target Date <span className="text-destructive">*</span>
             </label>
             <input
               type="date"
               {...register("targetDate", {
                 valueAsDate: false,
               })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all"
+              className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring transition-all"
             />
             {errors.targetDate && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+              <p className="text-xs text-destructive mt-1">
                 {errors.targetDate.message}
               </p>
             )}
@@ -166,27 +166,27 @@ function NewGoalForm() {
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Description <span className="text-gray-500">(optional)</span>
+          <label className="block text-sm font-semibold text-foreground mb-2">
+            Description <span className="text-muted-foreground">(optional)</span>
           </label>
           <textarea
             {...register("description")}
             rows={3}
             placeholder="Add notes about this goal..."
-            className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all resize-none"
+            className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring transition-all resize-none"
           />
         </div>
 
         {/* Required SIP Display */}
         {requiredSIP > 0 && (
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">
+          <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
+            <p className="text-sm font-semibold text-primary mb-1">
               Required Monthly SIP
             </p>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <p className="text-2xl font-bold text-primary">
               {formatCurrency(requiredSIP)}
             </p>
-            <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+            <p className="text-xs text-primary/80 mt-1">
               Assumes 12% annual return with monthly compounding
             </p>
           </div>
@@ -194,24 +194,24 @@ function NewGoalForm() {
 
         {/* Error Message */}
         {error && (
-          <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 rounded-lg text-sm">
+          <div className="p-4 bg-destructive/10 border border-destructive/30 text-destructive rounded-lg text-sm">
             {error}
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-3 pt-6 border-t border-gray-200 dark:border-slate-800">
+        <div className="flex items-center gap-3 pt-6 border-t border-border">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold rounded-lg disabled:opacity-50 transition-colors"
+            className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg disabled:opacity-50 transition-colors"
           >
             {isSubmitting ? "Creating..." : "Create Goal"}
           </button>
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-6 py-2 border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+            className="px-6 py-2 border border-border text-foreground font-semibold rounded-lg hover:bg-accent transition-colors"
           >
             Cancel
           </button>
@@ -228,4 +228,3 @@ export default function NewGoalPage() {
     </ProtectedPage>
   );
 }
-

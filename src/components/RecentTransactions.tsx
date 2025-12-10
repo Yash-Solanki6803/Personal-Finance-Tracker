@@ -52,8 +52,8 @@ export function RecentTransactions() {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+      <div className="bg-card rounded-lg border border-border p-6">
+        <h2 className="text-xl font-bold text-card-foreground mb-4">
           Recent Transactions
         </h2>
         <div className="space-y-3">
@@ -62,7 +62,7 @@ export function RecentTransactions() {
             .map((_, i) => (
               <div
                 key={i}
-                className="h-16 bg-gray-200 dark:bg-slate-700 rounded animate-pulse"
+                className="h-16 bg-muted rounded animate-pulse"
               />
             ))}
         </div>
@@ -72,31 +72,31 @@ export function RecentTransactions() {
 
   if (error) {
     return (
-      <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+      <div className="bg-card rounded-lg border border-border p-6">
+        <h2 className="text-xl font-bold text-card-foreground mb-4">
           Recent Transactions
         </h2>
-        <div className="text-red-600 dark:text-red-400 text-sm">{error}</div>
+        <div className="text-destructive text-sm">{error}</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
+    <div className="bg-card rounded-lg border border-border p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+        <h2 className="text-xl font-bold text-card-foreground">
           Recent Transactions
         </h2>
         <Link
           href="/transactions"
-            className="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
+          className="text-primary hover:underline text-sm font-medium"
         >
-            View All
+          View All
         </Link>
       </div>
 
       {transactions.length === 0 ? (
-        <p className="text-gray-600 dark:text-gray-400 text-center py-8">
+        <p className="text-muted-foreground text-center py-8">
           No transactions yet. Add your first transaction to get started!
         </p>
       ) : (
@@ -104,25 +104,25 @@ export function RecentTransactions() {
           {transactions.map((transaction) => (
             <div
               key={transaction.id}
-              className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+              className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg hover:bg-secondary transition-colors"
             >
               <div className="flex-1">
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${
                       transaction.type === "income"
-                        ? "bg-green-500"
-                        : "bg-red-500"
+                        ? "bg-success"
+                        : "bg-destructive"
                     }`}
                   >
                     {transaction.category.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900 dark:text-white">
+                    <p className="font-medium text-foreground">
                       {transaction.category}
                     </p>
                     {transaction.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-muted-foreground">
                         {transaction.description}
                       </p>
                     )}
@@ -133,14 +133,14 @@ export function RecentTransactions() {
                 <p
                   className={`font-bold ${
                     transaction.type === "income"
-                      ? "text-green-600 dark:text-green-400"
-                      : "text-red-600 dark:text-red-400"
+                      ? "text-success"
+                      : "text-destructive"
                   }`}
                 >
                   {transaction.type === "income" ? "+" : "-"}
                   {formatCurrency(transaction.amount)}
                 </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
+                <p className="text-xs text-muted-foreground">
                   {new Date(transaction.date).toLocaleDateString()}
                 </p>
               </div>

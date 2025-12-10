@@ -79,18 +79,15 @@ function SalaryPageContent() {
       setSaving(true);
       setError(null);
 
-      // Convert date to ISO string
       let dateValue: string;
       if (data.lastUpdatedDate instanceof Date) {
         dateValue = data.lastUpdatedDate.toISOString();
       } else if (typeof data.lastUpdatedDate === 'string') {
-        // If it's a date string from input, convert to ISO
         dateValue = new Date(data.lastUpdatedDate).toISOString();
       } else {
         dateValue = new Date().toISOString();
       }
 
-      // Create new salary record (always create new, don't update existing)
       const res = await fetch("/api/salary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -103,7 +100,6 @@ function SalaryPageContent() {
       const body = await res.json();
       if (!res.ok) throw new Error(body.message || "Failed to update salary");
 
-      // Refresh data
       const [currentRes, historyRes] = await Promise.all([
         fetch("/api/salary"),
         fetch("/api/salary/history"),
@@ -132,7 +128,6 @@ function SalaryPageContent() {
     }
   };
 
-  // Prepare chart data
   const chartData = salaryHistory
     .map((record) => ({
       date: format(new Date(record.lastUpdatedDate), "MMM yyyy"),
@@ -144,7 +139,7 @@ function SalaryPageContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="text-gray-500 dark:text-gray-400">Loading salary data...</div>
+        <div className="text-muted-foreground">Loading salary data...</div>
       </div>
     );
   }
@@ -153,24 +148,24 @@ function SalaryPageContent() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Salary Management</h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+        <h1 className="text-3xl font-bold text-foreground">Salary Management</h1>
+        <p className="text-sm text-muted-foreground mt-2">
           Track and update your monthly take-home salary.
         </p>
       </div>
 
       {/* Current Salary Display */}
       {currentSalary && (
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-card rounded-lg border border-border p-6">
+          <h2 className="text-lg font-semibold text-card-foreground mb-4">
             Current Salary
           </h2>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">
+              <p className="text-3xl font-bold text-card-foreground">
                 {formatCurrency(currentSalary.amount)}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Last updated: {format(new Date(currentSalary.lastUpdatedDate), "MMMM d, yyyy")}
               </p>
             </div>
@@ -179,32 +174,32 @@ function SalaryPageContent() {
       )}
 
       {/* Update Salary Form */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+      <div className="bg-card rounded-lg border border-border p-6">
+        <h2 className="text-lg font-semibold text-card-foreground mb-6">
           Update Salary
         </h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-md">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Monthly Salary Amount <span className="text-red-500">*</span>
+            <label className="block text-sm font-semibold text-foreground mb-2">
+              Monthly Salary Amount <span className="text-destructive">*</span>
             </label>
             <input
               type="number"
               step="0.01"
               {...register("amount", { valueAsNumber: true })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="0.00"
             />
             {errors.amount && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+              <p className="text-xs text-destructive mt-1">
                 {errors.amount.message}
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Effective Date <span className="text-red-500">*</span>
+            <label className="block text-sm font-semibold text-foreground mb-2">
+              Effective Date <span className="text-destructive">*</span>
             </label>
             <input
               type="date"
@@ -212,17 +207,17 @@ function SalaryPageContent() {
                 valueAsDate: false,
               })}
               defaultValue={format(new Date(), "yyyy-MM-dd")}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
             />
             {errors.lastUpdatedDate && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+              <p className="text-xs text-destructive mt-1">
                 {errors.lastUpdatedDate.message}
               </p>
             )}
           </div>
 
           {error && (
-            <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 rounded-lg text-sm">
+            <div className="p-4 bg-destructive/10 border border-destructive/30 text-destructive rounded-lg text-sm">
               {error}
             </div>
           )}
@@ -230,7 +225,7 @@ function SalaryPageContent() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg disabled:opacity-50 transition-colors"
+            className="w-full px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg disabled:opacity-50 transition-colors"
           >
             {saving ? "Saving..." : "Update Salary"}
           </button>
@@ -239,8 +234,8 @@ function SalaryPageContent() {
 
       {/* Salary History Chart */}
       {chartData.length > 0 && (
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+        <div className="bg-card rounded-lg border border-border p-6">
+          <h2 className="text-lg font-semibold text-card-foreground mb-6">
             Salary History Trend
           </h2>
           <ResponsiveContainer width="100%" height={300}>
@@ -264,18 +259,18 @@ function SalaryPageContent() {
 
       {/* Salary History Table */}
       {salaryHistory.length > 0 && (
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+        <div className="bg-card rounded-lg border border-border p-6">
+          <h2 className="text-lg font-semibold text-card-foreground mb-6">
             Salary History
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-slate-700">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">
                     Date
                   </th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">
                     Amount
                   </th>
                 </tr>
@@ -284,12 +279,12 @@ function SalaryPageContent() {
                 {salaryHistory.map((record) => (
                   <tr
                     key={record.id}
-                    className="border-b border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800"
+                    className="border-b border-border hover:bg-secondary transition-colors"
                   >
-                    <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
+                    <td className="py-3 px-4 text-sm text-foreground">
                       {format(new Date(record.lastUpdatedDate), "MMMM d, yyyy")}
                     </td>
-                    <td className="py-3 px-4 text-sm text-right font-semibold text-gray-900 dark:text-white">
+                    <td className="py-3 px-4 text-sm text-right font-semibold text-foreground">
                       {formatCurrency(record.amount)}
                     </td>
                   </tr>
@@ -310,4 +305,3 @@ export default function SalaryPage() {
     </ProtectedPage>
   );
 }
-

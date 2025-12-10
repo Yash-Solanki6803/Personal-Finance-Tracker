@@ -187,7 +187,7 @@ function BudgetPageContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="text-gray-500 dark:text-gray-400">Loading budget settings...</div>
+        <div className="text-muted-foreground">Loading budget settings...</div>
       </div>
     );
   }
@@ -196,21 +196,21 @@ function BudgetPageContent() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Budget Management</h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+        <h1 className="text-3xl font-bold text-foreground">Budget Management</h1>
+        <p className="text-sm text-muted-foreground mt-2">
           Configure your budget rules and analyze your spending patterns.
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 dark:border-slate-800">
+      <div className="border-b border-border">
         <nav className="flex space-x-8">
           <button
             onClick={() => setActiveTab("analysis")}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === "analysis"
-                ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
             }`}
           >
             Budget Analysis
@@ -219,8 +219,8 @@ function BudgetPageContent() {
             onClick={() => setActiveTab("rules")}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === "rules"
-                ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
             }`}
           >
             Budget Rules
@@ -232,28 +232,28 @@ function BudgetPageContent() {
       {activeTab === "analysis" && (
         <div className="space-y-6">
           {/* Month Selector */}
-          <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-4">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <div className="bg-card rounded-lg border border-border p-4">
+            <label className="block text-sm font-semibold text-foreground mb-2">
               Select Month
             </label>
             <input
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg"
+              className="px-4 py-2 border border-input bg-card text-foreground rounded-lg"
               aria-label="Select month for budget analysis"
             />
           </div>
 
           {loadingAnalysis ? (
             <div className="flex items-center justify-center h-96">
-              <div className="text-gray-500 dark:text-gray-400">Loading analysis...</div>
+              <div className="text-muted-foreground">Loading analysis...</div>
             </div>
           ) : analysis ? (
             <>
               {/* Pie Chart */}
-              <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+              <div className="bg-card rounded-lg border border-border p-6">
+                <h2 className="text-xl font-bold text-card-foreground mb-6">
                   Expense Breakdown
                 </h2>
                 <ResponsiveContainer width="100%" height={400}>
@@ -293,46 +293,46 @@ function BudgetPageContent() {
                   return (
                     <div
                       key={category}
-                      className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6"
+                      className="bg-card rounded-lg border border-border p-6"
                     >
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 capitalize">
+                      <h3 className="text-lg font-semibold text-card-foreground mb-4 capitalize">
                         {category}
                       </h3>
                       <div className="space-y-3">
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">Budget:</span>
-                          <span className="font-semibold text-gray-900 dark:text-white">
+                          <span className="text-muted-foreground">Budget:</span>
+                          <span className="font-semibold text-foreground">
                             {formatCurrency(data.budget)}
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">Spent:</span>
+                          <span className="text-muted-foreground">Spent:</span>
                           <span
                             className={`font-semibold ${
                               isOverBudget
-                                ? "text-red-600 dark:text-red-400"
-                                : "text-gray-900 dark:text-white"
+                                ? "text-destructive"
+                                : "text-foreground"
                             }`}
                           >
                             {formatCurrency(data.actual)}
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">Remaining:</span>
+                          <span className="text-muted-foreground">Remaining:</span>
                           <span
                             className={`font-semibold ${
                               data.remaining < 0
-                                ? "text-red-600 dark:text-red-400"
-                                : "text-green-600 dark:text-green-400"
+                                ? "text-destructive"
+                                : "text-success"
                             }`}
                           >
                             {formatCurrency(data.remaining)}
                           </span>
                         </div>
-                        <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-3">
+                        <div className="w-full bg-muted rounded-full h-3">
                           <div
                             className={`h-3 rounded-full transition-all ${
-                              isOverBudget ? "bg-red-500" : "bg-blue-500"
+                              isOverBudget ? "bg-destructive" : "bg-primary"
                             }`}
                             style={{
                               width: `${Math.min(usagePercent, 100)}%`,
@@ -344,7 +344,7 @@ function BudgetPageContent() {
                             aria-label={`Budget usage for ${category}`}
                           />
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-muted-foreground">
                           {usagePercent.toFixed(1)}% of budget used
                         </p>
                       </div>
@@ -354,8 +354,8 @@ function BudgetPageContent() {
               </div>
 
               {/* Comparison Chart */}
-              <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+              <div className="bg-card rounded-lg border border-border p-6">
+                <h2 className="text-xl font-bold text-card-foreground mb-6">
                   Budget vs Actual
                 </h2>
                 <ResponsiveContainer width="100%" height={300}>
@@ -372,8 +372,8 @@ function BudgetPageContent() {
               </div>
             </>
           ) : (
-            <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-8 text-center">
-              <p className="text-gray-600 dark:text-gray-400">
+            <div className="bg-card rounded-lg border border-border p-8 text-center">
+              <p className="text-muted-foreground">
                 No data available for the selected month.
               </p>
             </div>
@@ -383,14 +383,14 @@ function BudgetPageContent() {
 
       {/* Budget Rules Tab */}
       {activeTab === "rules" && (
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-8">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+        <div className="bg-card rounded-lg border border-border p-8">
+          <h2 className="text-xl font-bold text-card-foreground mb-6">
             Budget Rule Configuration
           </h2>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-md">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Needs Percentage <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-foreground mb-2">
+                Needs Percentage <span className="text-destructive">*</span>
               </label>
               <input
                 type="number"
@@ -398,18 +398,18 @@ function BudgetPageContent() {
                 min="0"
                 max="100"
                 {...register("needsPercent", { valueAsNumber: true })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
               />
               {errors.needsPercent && (
-                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                <p className="text-xs text-destructive mt-1">
                   {errors.needsPercent.message}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Wants Percentage <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-foreground mb-2">
+                Wants Percentage <span className="text-destructive">*</span>
               </label>
               <input
                 type="number"
@@ -417,18 +417,18 @@ function BudgetPageContent() {
                 min="0"
                 max="100"
                 {...register("wantsPercent", { valueAsNumber: true })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
               />
               {errors.wantsPercent && (
-                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                <p className="text-xs text-destructive mt-1">
                   {errors.wantsPercent.message}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Savings Percentage <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-foreground mb-2">
+                Savings Percentage <span className="text-destructive">*</span>
               </label>
               <input
                 type="number"
@@ -436,40 +436,40 @@ function BudgetPageContent() {
                 min="0"
                 max="100"
                 {...register("savingsPercent", { valueAsNumber: true })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
               />
               {errors.savingsPercent && (
-                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                <p className="text-xs text-destructive mt-1">
                   {errors.savingsPercent.message}
                 </p>
               )}
             </div>
 
             {/* Total Percentage Indicator */}
-            <div className="p-4 bg-gray-50 dark:bg-slate-800 rounded-lg">
+            <div className="p-4 bg-secondary rounded-lg">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span className="text-sm font-medium text-foreground">
                   Total:
                 </span>
                 <span
                   className={`text-lg font-bold ${
                     totalPercent === 100
-                      ? "text-green-600 dark:text-green-400"
-                      : "text-red-600 dark:text-red-400"
+                      ? "text-success"
+                      : "text-destructive"
                   }`}
                 >
                   {totalPercent.toFixed(1)}%
                 </span>
               </div>
               {totalPercent !== 100 && (
-                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                <p className="text-xs text-destructive mt-1">
                   Total must equal 100%
                 </p>
               )}
             </div>
 
             {error && (
-              <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 rounded-lg text-sm">
+              <div className="p-4 bg-destructive/10 border border-destructive/30 text-destructive rounded-lg text-sm">
                 {error}
               </div>
             )}
@@ -477,7 +477,7 @@ function BudgetPageContent() {
             <button
               type="submit"
               disabled={saving || totalPercent !== 100}
-              className="w-full px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg disabled:opacity-50 transition-colors"
+              className="w-full px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg disabled:opacity-50 transition-colors"
             >
               {saving ? "Saving..." : "Save Budget Rule"}
             </button>
@@ -495,4 +495,3 @@ export default function BudgetPage() {
     </ProtectedPage>
   );
 }
-
