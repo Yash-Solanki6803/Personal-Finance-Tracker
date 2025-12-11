@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const [password, setPassword] = useState("");
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,17 +19,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password, username }),
-        credentials: "include",
-      });
+      const success = await login(username, password);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        const errorMsg = data.message || "Login failed. Please try again.";
+      if (!success) {
+        const errorMsg = "Login failed. Please try again.";
         setError(errorMsg);
         toast.error(errorMsg);
         setLoading(false);
@@ -38,10 +33,8 @@ export default function LoginPage() {
       setPassword("");
       toast.success("Login successful!");
 
-      // Add a small delay to ensure cookie is set before redirecting
-      setTimeout(() => {
-        router.push("/");
-      }, 100);
+      // Redirect to dashboard
+      router.push("/");
     } catch (err) {
       const errorMsg = "An error occurred. Please try again.";
       setError(errorMsg);
