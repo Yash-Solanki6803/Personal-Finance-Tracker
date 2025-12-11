@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
-import { Pause, Play, Archive, Edit, Trash2 } from "lucide-react";
+import { Pause, Play, Archive, Edit, Trash2, DollarSign, XCircle } from "lucide-react";
+import { InvestmentModal } from "./InvestmentModal";
 
 export interface InvestmentPlan {
   id: string;
@@ -25,6 +26,10 @@ export function InvestmentPlansList() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Modal state
+  const [investModalOpen, setInvestModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<InvestmentPlan | null>(null);
 
   const fetchPlans = async () => {
     try {
@@ -104,6 +109,38 @@ export function InvestmentPlansList() {
         const body = await res.json().catch(() => null);
         throw new Error(body?.message || "Failed to duplicate plan");
       }
+      // Refresh list
+      fetchPlans();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    }
+  };
+
+  const handleOpenInvestModal = (plan: InvestmentPlan) => {
+    setSelectedPlan(plan);
+    setInvestModalOpen(true);
+  };
+
+  const handleClosePlan = async (id: string, name: string) => {
+    if (!confirm(`Close and mature the plan "${name}"? This will archive the plan and create a withdrawal transaction.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/investment-plans/${id}/close`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.message || "Failed to close plan");
+      }
+
+      // Show success message
+      alert(`Plan "${name}" closed successfully!`);
+
       // Refresh list
       fetchPlans();
     } catch (err) {
@@ -225,6 +262,28 @@ export function InvestmentPlansList() {
                 )}
               </div>
 
+              {/* Primary Actions - Invest & Close */}
+              {(p.status === "active" || p.status === "paused") && (
+                <div className="flex items-center gap-2 mb-3">
+                  {p.status === "active" && (
+                    <button
+                      onClick={() => handleOpenInvestModal(p)}
+                      className="flex-1 px-3 py-2 bg-success hover:bg-success/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <DollarSign className="w-4 h-4" />
+                      Invest
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleClosePlan(p.id, p.name)}
+                    className="flex-1 px-3 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Close Plan
+                  </button>
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="flex items-center justify-between pt-4 border-t border-border">
                 <div className="flex items-center gap-2">
@@ -289,6 +348,23 @@ export function InvestmentPlansList() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Investment Modal */}
+      {selectedPlan && (
+        <InvestmentModal
+          isOpen={investModalOpen}
+          onClose={() => {
+            setInvestModalOpen(false);
+            setSelectedPlan(null);
+          }}
+          planId={selectedPlan.id}
+          planName={selectedPlan.name}
+          monthlyContribution={selectedPlan.monthlyContribution}
+          onSuccess={() => {
+            fetchPlans();
+          }}
+        />
       )}
     </div>
   );

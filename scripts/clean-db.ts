@@ -8,6 +8,10 @@ async function cleanDatabase() {
     console.log("Cleaning database...");
 
     // Delete all data in order (due to foreign key constraints)
+    // Delete InvestmentTransaction first as it references Transaction
+    await prisma.investmentTransaction.deleteMany({});
+    console.log("✓ Deleted all investment transactions");
+
     await prisma.transaction.deleteMany({});
     console.log("✓ Deleted all transactions");
 

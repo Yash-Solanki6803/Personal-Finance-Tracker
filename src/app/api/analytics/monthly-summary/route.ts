@@ -9,6 +9,7 @@ import { getUserIdFromRequest } from "@/lib/auth-middleware";
 import { sumAmounts, groupByMonth, groupByCategory } from "@/lib/utils";
 import { startOfMonth, endOfMonth } from "date-fns";
 import { getCategoryClassification } from "@/lib/category-classification";
+import { TransactionType } from "@/lib/enums";
 
 const prisma = getPrismaClient();
 
@@ -43,9 +44,10 @@ export async function GET(request: NextRequest) {
       orderBy: { date: "desc" },
     });
 
-    // Separate income and expense
-    const income = transactions.filter((t) => t.type === "income");
-    const expense = transactions.filter((t) => t.type === "expense");
+    // Separate income, expense, and investments
+    const income = transactions.filter((t) => t.type === TransactionType.INCOME);
+    const expense = transactions.filter((t) => t.type === TransactionType.EXPENSE);
+    const investments = transactions.filter((t) => t.type === TransactionType.INVESTMENT);
 
     // Filter out income transactions with savings categories for budget calculations
     const budgetIncome = income.filter((t) => {
@@ -57,7 +59,8 @@ export async function GET(request: NextRequest) {
     const totalIncome = sumAmounts(income); // Total income including savings transfers
     const budgetTotalIncome = sumAmounts(budgetIncome); // Income for budget calculations (excluding savings)
     const totalExpense = sumAmounts(expense);
-    const netSavings = totalIncome - totalExpense;
+    const totalInvestments = sumAmounts(investments);
+    const netSavings = totalIncome - totalExpense - totalInvestments;
 
     // Group expenses by category
     const expenseByCategory = groupByCategory(expense);
@@ -75,9 +78,10 @@ export async function GET(request: NextRequest) {
     });
 
     // Calculate actual spending by budget category (needs/wants/savings)
+    // Include investments in savings
     let needsActual = 0;
     let wantsActual = 0;
-    let savingsActual = 0;
+    let savingsActual = totalInvestments; // Start with investments
 
     expense.forEach((transaction) => {
       const classification = getCategoryClassification(transaction.category);
@@ -129,6 +133,7 @@ export async function GET(request: NextRequest) {
         month: monthStart.toISOString().substring(0, 7),
         totalIncome,
         totalExpense,
+        totalInvestments,
         netSavings,
         categoryBreakdown,
         budgetAllocation,

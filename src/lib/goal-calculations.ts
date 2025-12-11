@@ -15,7 +15,7 @@ export const calculateRequiredSIP = (
   targetAmount: number,
   targetDate: Date,
   expectedReturnPercent: number = 12, // Default 12% annual return
-  compoundingFrequency: string = "monthly",
+  compoundingFrequency: string = "annually",  // CHANGED FROM "monthly"
   annualIncreasePercent: number = 10 // Default 10% annual increase
 ): number => {
   const now = new Date();
@@ -30,14 +30,34 @@ export const calculateRequiredSIP = (
     return 0; // Target date is in the past
   }
 
-  // Calculate monthly return rate - this is always monthly regardless of compounding
-  // because we're making monthly contributions
-  const monthlyRate = expectedReturnPercent / 100 / 12;
+  // Calculate return rate based on compounding frequency
+  let periodicRate: number;
+  let periodsPerYear: number;
+
+  switch (compoundingFrequency) {
+    case "annually":
+      periodicRate = expectedReturnPercent / 100;
+      periodsPerYear = 1;
+      break;
+    case "quarterly":
+      periodicRate = expectedReturnPercent / 100 / 4;
+      periodsPerYear = 4;
+      break;
+    case "monthly":
+    default:
+      periodicRate = expectedReturnPercent / 100 / 12;
+      periodsPerYear = 12;
+      break;
+  }
+
+  // For SIP calculations, we still make monthly contributions
+  // but the interest compounds at the specified frequency
+  const monthlyRate = periodicRate / (12 / periodsPerYear);
 
   // Calculate the future value factor accounting for annual increases
   // Using iterative approach to handle annual increases
   let futureValueFactor = 0;
-  let annualIncreaseRate = annualIncreasePercent / 100;
+  const annualIncreaseRate = annualIncreasePercent / 100;
 
   for (let month = 0; month < months; month++) {
     // Calculate which year this month falls into (0-indexed)
@@ -130,4 +150,3 @@ export const calculateGoalProgress = (
     requiredSIP,
   };
 };
-

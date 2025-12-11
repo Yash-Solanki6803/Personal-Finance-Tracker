@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import { Trash2, Edit, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { TransactionType } from "@/lib/enums";
 
 interface Transaction {
   id: string;
   amount: number;
   category: string;
-  type: "income" | "expense";
+  type: string;
   description?: string;
   date: string;
   recurringId?: string | null;
@@ -247,6 +248,23 @@ export function TransactionsList() {
     );
   }
 
+  // Calculate totals
+  const totals = transactions.reduce(
+    (acc, t) => {
+      if (t.type === TransactionType.INCOME) {
+        acc.income += t.amount;
+      } else if (t.type === TransactionType.EXPENSE) {
+        acc.expenses += t.amount;
+      } else if (t.type === TransactionType.INVESTMENT) {
+        acc.investments += t.amount;
+      }
+      return acc;
+    },
+    { income: 0, expenses: 0, investments: 0 }
+  );
+
+  const netBalance = totals.income - totals.expenses - totals.investments;
+
   return (
     <div className="bg-card rounded-lg border border-border p-6">
       <div className="flex items-center justify-between mb-6">
@@ -258,6 +276,46 @@ export function TransactionsList() {
           + Add Transaction
         </Link>
       </div>
+
+      {/* Totals Summary */}
+      {transactions.length > 0 && (
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="p-4 rounded-lg bg-success/10 border border-success/30">
+            <p className="text-xs font-medium text-success/80 mb-1">Total Income</p>
+            <p className="text-2xl font-bold text-success">
+              {formatCurrency(totals.income)}
+            </p>
+          </div>
+          <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/30">
+            <p className="text-xs font-medium text-destructive/80 mb-1">Total Expenses</p>
+            <p className="text-2xl font-bold text-destructive">
+              {formatCurrency(totals.expenses)}
+            </p>
+          </div>
+          <div className="p-4 rounded-lg bg-primary/10 border border-primary/30">
+            <p className="text-xs font-medium text-primary/80 mb-1">Total Investments</p>
+            <p className="text-2xl font-bold text-primary">
+              {formatCurrency(totals.investments)}
+            </p>
+          </div>
+          <div className={`p-4 rounded-lg border ${
+            netBalance >= 0
+              ? 'bg-success/10 border-success/30'
+              : 'bg-destructive/10 border-destructive/30'
+          }`}>
+            <p className={`text-xs font-medium mb-1 ${
+              netBalance >= 0 ? 'text-success/80' : 'text-destructive/80'
+            }`}>
+              Net Balance
+            </p>
+            <p className={`text-2xl font-bold ${
+              netBalance >= 0 ? 'text-success' : 'text-destructive'
+            }`}>
+              {netBalance >= 0 ? '+' : ''}{formatCurrency(netBalance)}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="mb-6 space-y-4 p-4 bg-secondary/50 rounded-lg">
@@ -276,8 +334,8 @@ export function TransactionsList() {
               aria-label="Filter by transaction type"
             >
               <option value="all">All</option>
-              <option value="income">Income</option>
-              <option value="expense">Expense</option>
+              <option value={TransactionType.INCOME}>Income</option>
+              <option value={TransactionType.EXPENSE}>Expense</option>
             </select>
           </div>
 
@@ -502,7 +560,7 @@ export function TransactionsList() {
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${
-                        t.type === "income"
+                        t.type === TransactionType.INCOME
                           ? "bg-success"
                           : "bg-destructive"
                       }`}
@@ -533,12 +591,12 @@ export function TransactionsList() {
                   <div className="text-right">
                     <p
                       className={`font-semibold text-lg ${
-                        t.type === "income"
+                        t.type === TransactionType.INCOME
                           ? "text-success"
                           : "text-destructive"
                       }`}
                     >
-                      {t.type === "income" ? "+" : "-"}
+                      {t.type === TransactionType.INCOME ? "+" : "-"}
                       {formatCurrency(t.amount)}
                     </p>
                   </div>

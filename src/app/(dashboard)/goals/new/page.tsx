@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { ProtectedPage } from "@/components/ProtectedPage";
 import { GoalInputSchema } from "@/lib/schemas";
+import { GoalStatus } from "@/lib/enums";
 import * as z from "zod";
 import { formatCurrency } from "@/lib/utils";
 import { calculateRequiredSIP } from "@/lib/goal-calculations";
@@ -25,7 +26,7 @@ function NewGoalForm() {
   } = useForm<FormValues>({
     resolver: zodResolver(GoalInputSchema),
     defaultValues: {
-      status: "on_track",
+      status: GoalStatus.ON_TRACK,
     },
   });
 
@@ -75,7 +76,7 @@ function NewGoalForm() {
         targetAmount: targetAmountValue,
         targetDate: dateValue || new Date().toISOString(),
         description: data.description || undefined,
-        status: data.status || "on_track",
+        status: data.status || GoalStatus.ON_TRACK,
       };
 
       const res = await fetch("/api/goals", {

@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { ProtectedPage } from "@/components/ProtectedPage";
 import { InvestmentPlanSchema } from "@/lib/schemas";
+import { CompoundingFrequency, InvestmentPlanStatus } from "@/lib/enums";
 import * as z from "zod";
 
 type FormValues = z.infer<typeof InvestmentPlanSchema>;
@@ -23,9 +24,9 @@ function NewInvestmentPlanForm() {
   } = useForm<FormValues>({
     resolver: zodResolver(InvestmentPlanSchema),
     defaultValues: {
-      compoundingFrequency: "monthly",
+      compoundingFrequency: CompoundingFrequency.MONTHLY,
       annualIncreasePercent: 0,
-      status: "active",
+      status: InvestmentPlanStatus.ACTIVE,
       startDate: new Date(),
     },
   });
@@ -40,9 +41,9 @@ function NewInvestmentPlanForm() {
       reset({
         name: name ? decodeURIComponent(name) : "",
         monthlyContribution: monthlyContribution ? Math.max(0, parseFloat(monthlyContribution) || 0) : 0,
-        compoundingFrequency: "monthly",
+        compoundingFrequency: CompoundingFrequency.MONTHLY,
         annualIncreasePercent: 10, // Default 10% annual increase when creating from goal
-        status: "active",
+        status: InvestmentPlanStatus.ACTIVE,
         startDate: new Date(),
         expectedReturnMin: 10,
         expectedReturnMax: 12,

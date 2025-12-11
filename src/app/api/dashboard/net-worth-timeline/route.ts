@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getUserIdFromRequest } from "@/lib/auth-middleware";
 import { getPrismaClient } from "@/lib/api-utils";
 import { successResponse, errorResponse, handleApiError } from "@/lib/api-utils";
+import { TransactionType } from "@/lib/enums";
 
 const prisma = getPrismaClient();
 
@@ -56,8 +57,8 @@ export async function GET(request: NextRequest) {
       const d = new Date(tx.date);
       const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
       if (!(key in cashTimeline)) return;
-      if (tx.type === "income") cashTimeline[key] += tx.amount;
-      if (tx.type === "expense" || tx.type === "investment") cashTimeline[key] -= tx.amount;
+      if (tx.type === TransactionType.INCOME) cashTimeline[key] += tx.amount;
+      if (tx.type === TransactionType.EXPENSE || tx.type === TransactionType.INVESTMENT) cashTimeline[key] -= tx.amount;
     });
 
     // Calculate cumulative cash
@@ -68,50 +69,38 @@ export async function GET(request: NextRequest) {
       cashCumulative[m] = cumulativeCash;
     });
 
-    // Calculate investment value for each month using proper SIP formula
-    const investmentTimeline: Record<string, { min: number; max: number }> = {};
-    months.forEach(m => investmentTimeline[m] = { min: 0, max: 0 });
-    for (const inv of investments) {
-      const start = new Date(inv.startDate);
-      const monthlyRateMin = inv.expectedReturnMin / 100 / 12;
-      const monthlyRateMax = inv.expectedReturnMax / 100 / 12;
-      const P = inv.monthlyContribution;
+    // Calculate actual investment value for each month
+    const investmentTimeline: Record<string, number> = {};
+    months.forEach(m => investmentTimeline[m] = 0);
 
-      months.forEach((m) => {
-        const [year, month] = m.split("-").map(Number);
-        const monthDate = new Date(year, month-1, 1);
-        if (monthDate < start) return;
+    // Get all investment transactions
+    const allInvestmentTransactions = await prisma.investmentTransaction.findMany({
+      where: { userId },
+      select: { amount: true, year: true, month: true },
+    });
 
-        // Calculate elapsed months
-        const elapsedMonths = Math.max(0, (year - start.getFullYear()) * 12 + (month - (start.getMonth()+1)));
-        if (elapsedMonths === 0) return;
+    // Aggregate investments by month
+    allInvestmentTransactions.forEach(inv => {
+      const key = `${inv.year}-${String(inv.month).padStart(2, "0")}`;
+      if (key in investmentTimeline) {
+        investmentTimeline[key] += inv.amount;
+      }
+    });
 
-        // SIP Future Value Formula: FV = P × [(1 + r)^n - 1] / r × (1 + r)
-        let fvMin = 0, fvMax = 0;
-        if (monthlyRateMin > 0) {
-          fvMin = P * (((1 + monthlyRateMin) ** elapsedMonths - 1) / monthlyRateMin) * (1 + monthlyRateMin);
-        } else {
-          fvMin = P * elapsedMonths;
-        }
-        if (monthlyRateMax > 0) {
-          fvMax = P * (((1 + monthlyRateMax) ** elapsedMonths - 1) / monthlyRateMax) * (1 + monthlyRateMax);
-        } else {
-          fvMax = P * elapsedMonths;
-        }
-
-        investmentTimeline[m].min += Math.max(0, fvMin);
-        investmentTimeline[m].max += Math.max(0, fvMax);
-      });
-    }
+    // Calculate cumulative investments
+    let cumulativeInvestments = 0;
+    const investmentsCumulative: Record<string, number> = {};
+    months.forEach(m => {
+      cumulativeInvestments += investmentTimeline[m];
+      investmentsCumulative[m] = cumulativeInvestments;
+    });
 
     // Build final timeline
     const timeline = months.map(m => ({
       month: m,
       cash: cashCumulative[m],
-      investmentsMin: investmentTimeline[m].min,
-      investmentsMax: investmentTimeline[m].max,
-      netWorthMin: cashCumulative[m] + investmentTimeline[m].min,
-      netWorthMax: cashCumulative[m] + investmentTimeline[m].max,
+      investments: investmentsCumulative[m],
+      netWorth: cashCumulative[m] + investmentsCumulative[m],
     }));
 
     return successResponse(timeline, "Net worth timeline generated");
