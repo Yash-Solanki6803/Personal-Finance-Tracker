@@ -37,9 +37,9 @@ async function main() {
     const budgetRule = await prisma.budgetRule.create({
       data: {
         userId: defaultUser.id,
-        needsPercent: 50,
-        wantsPercent: 30,
-        savingsPercent: 20,
+        needsPercent: 50.0,
+        wantsPercent: 30.0,
+        savingsPercent: 20.0,
       },
     });
     console.log("Created default budget rule:", budgetRule);
@@ -86,7 +86,84 @@ async function main() {
     });
   }
 
-  console.log(`Seeded ${categories.length} default categories. Seed completed successfully!`);
+  console.log(`Seeded ${categories.length} default categories.`);
+
+  // Create a default salary record for the user if not present
+  const existingSalary = await prisma.salary.findFirst({ where: { userId: defaultUser.id } });
+  if (!existingSalary) {
+    const salary = await prisma.salary.create({
+      data: {
+        userId: defaultUser.id,
+        amount: 5000.0,
+        lastUpdatedDate: new Date(),
+      },
+    });
+    console.log("Created default salary:", { id: salary.id, amount: salary.amount });
+  } else {
+    console.log("Salary already exists for default user");
+  }
+
+  // Create a default goal for the user
+  let defaultGoal = await prisma.goal.findFirst({ where: { userId: defaultUser.id, name: "Emergency Fund" } });
+  if (!defaultGoal) {
+    const targetDate = new Date();
+    targetDate.setFullYear(targetDate.getFullYear() + 1);
+    defaultGoal = await prisma.goal.create({
+      data: {
+        userId: defaultUser.id,
+        name: "Emergency Fund",
+        targetAmount: 5000.0,
+        targetDate,
+        description: "Build a 3-6 month emergency fund",
+        status: "on_track",
+      },
+    });
+    console.log("Created default goal:", { id: defaultGoal.id, name: defaultGoal.name });
+  } else {
+    console.log("Default goal already exists:", { id: defaultGoal.id, name: defaultGoal.name });
+  }
+
+  // Create a simple investment plan linked to the goal (if not exists)
+  const existingPlan = await prisma.investmentPlan.findFirst({ where: { userId: defaultUser.id, name: "Retirement Plan" } });
+  if (!existingPlan) {
+    const plan = await prisma.investmentPlan.create({
+      data: {
+        userId: defaultUser.id,
+        goalId: defaultGoal.id,
+        name: "Retirement Plan",
+        monthlyContribution: 200.0,
+        expectedReturnMin: 4.0,
+        expectedReturnMax: 8.0,
+        compoundingFrequency: "monthly",
+        annualIncreasePercent: 2.0,
+        startDate: new Date(),
+        status: "active",
+      },
+    });
+    console.log("Created default investment plan:", { id: plan.id, name: plan.name });
+  } else {
+    console.log("Investment plan already exists for default user");
+  }
+
+  // Create a recurring transaction example (e.g., monthly rent)
+  const existingRecurring = await prisma.recurringTransaction.findFirst({ where: { userId: defaultUser.id, frequency: "monthly" } });
+  if (!existingRecurring) {
+    const transactionData = JSON.stringify({ amount: 1200.0, category: "Rent/Mortgage", type: "expense", description: "Monthly rent" });
+    const recurring = await prisma.recurringTransaction.create({
+      data: {
+        userId: defaultUser.id,
+        transactionData,
+        frequency: "monthly",
+        nextDueDate: new Date(),
+        isActive: true,
+      },
+    });
+    console.log("Created default recurring transaction:", { id: recurring.id });
+  } else {
+    console.log("Recurring transaction already exists for default user");
+  }
+
+  console.log("Seed completed successfully!");
 }
 
 main()
