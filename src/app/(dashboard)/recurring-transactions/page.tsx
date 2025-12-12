@@ -68,33 +68,33 @@ function RecurringTransactionsForm({ onCreated }: { onCreated: () => void }) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-8 space-y-6 shadow-sm max-w-2xl">
+    <form onSubmit={handleSubmit(onSubmit)} className="bg-card rounded-lg border border-border p-8 space-y-6 shadow-sm max-w-2xl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Amount <span className="text-red-500">*</span></label>
-          <input type="number" step="0.01" {...register("amount", { valueAsNumber: true })} className="w-full px-4 py-2 border rounded-lg" />
-          {errors.amount && <p className="text-xs text-red-600 mt-1">{errors.amount.message}</p>}
+          <label className="block text-sm font-semibold text-foreground mb-2">Amount <span className="text-destructive">*</span></label>
+          <input type="number" step="0.01" {...register("amount", { valueAsNumber: true })} className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring" />
+          {errors.amount && <p className="text-xs text-destructive mt-1">{errors.amount.message}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Category <span className="text-red-500">*</span></label>
-          <input {...register("category")} className="w-full px-4 py-2 border rounded-lg" />
-          {errors.category && <p className="text-xs text-red-600 mt-1">{errors.category.message}</p>}
+          <label className="block text-sm font-semibold text-foreground mb-2">Category <span className="text-destructive">*</span></label>
+          <input {...register("category")} className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring" />
+          {errors.category && <p className="text-xs text-destructive mt-1">{errors.category.message}</p>}
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Type</label>
-          <select {...register("type")} className="w-full px-4 py-2 border rounded-lg">
+          <label className="block text-sm font-semibold text-foreground mb-2">Type</label>
+          <select {...register("type")} className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring">
             <option value="expense">Expense</option>
             <option value="income">Income</option>
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Frequency</label>
-          <select {...register("frequency")} className="w-full px-4 py-2 border rounded-lg">
+          <label className="block text-sm font-semibold text-foreground mb-2">Frequency</label>
+          <select {...register("frequency")} className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring">
             <option value="monthly">Monthly</option>
             <option value="weekly">Weekly</option>
             <option value="daily">Daily</option>
@@ -104,22 +104,22 @@ function RecurringTransactionsForm({ onCreated }: { onCreated: () => void }) {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Next Due Date</label>
-          <input type="date" {...register("nextDueDate")} className="w-full px-4 py-2 border rounded-lg" />
-          {errors.nextDueDate && <p className="text-xs text-red-600 mt-1">{errors.nextDueDate.message}</p>}
+          <label className="block text-sm font-semibold text-foreground mb-2">Next Due Date</label>
+          <input type="date" {...register("nextDueDate")} className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring" />
+          {errors.nextDueDate && <p className="text-xs text-destructive mt-1">{errors.nextDueDate.message}</p>}
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description <span className="text-gray-500">(optional)</span></label>
-        <textarea {...register("description")} rows={3} className="w-full px-4 py-2 border rounded-lg" />
+        <label className="block text-sm font-semibold text-foreground mb-2">Description <span className="text-muted-foreground">(optional)</span></label>
+        <textarea {...register("description")} rows={3} className="w-full px-4 py-2 border border-input bg-card text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
       </div>
 
-      {error && <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded">{error}</div>}
+      {error && <div className="p-4 bg-destructive/10 border border-destructive/30 text-destructive rounded-lg text-sm">{error}</div>}
 
-      <div className="flex items-center gap-3 pt-6 border-t border-gray-200 dark:border-slate-800">
-        <button type="submit" disabled={isSubmitting || creating} className="px-6 py-2 bg-blue-600 text-white rounded-lg">{isSubmitting || creating ? "Saving..." : "Save Recurring"}</button>
-        <button type="button" onClick={() => router.back()} className="px-6 py-2 border rounded-lg">Cancel</button>
+      <div className="flex items-center gap-3 pt-6 border-t border-border">
+        <button type="submit" disabled={isSubmitting || creating} className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg disabled:opacity-50 transition-colors">{isSubmitting || creating ? "Saving..." : "Save Recurring"}</button>
+        <button type="button" onClick={() => router.back()} className="px-6 py-2 border border-border text-foreground font-semibold rounded-lg hover:bg-accent transition-colors">Cancel</button>
       </div>
     </form>
   );
@@ -170,28 +170,39 @@ export default function RecurringTransactionsPage() {
     <ProtectedPage>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Recurring Transactions</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Manage recurring rules that auto-create transactions.</p>
+          <h1 className="text-3xl font-bold text-foreground">Recurring Transactions</h1>
+          <p className="text-sm text-muted-foreground mt-2">Manage recurring rules that auto-create transactions.</p>
         </div>
 
         <RecurringTransactionsForm onCreated={fetchList} />
 
-        <div className="bg-white dark:bg-slate-900 rounded-lg border p-4">
+        <div className="bg-card rounded-lg border border-border p-6">
+          <h2 className="text-xl font-bold text-card-foreground mb-4">Active Recurring Transactions</h2>
           {loading ? (
-            <div>Loading...</div>
+            <div className="flex items-center justify-center py-8">
+              <div className="text-muted-foreground">Loading...</div>
+            </div>
           ) : list.length === 0 ? (
-            <div>No recurring rules found.</div>
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No recurring rules found.</p>
+            </div>
           ) : (
             <div className="space-y-3">
               {list.map((r: any) => (
-                <div key={r.id} className="flex items-center justify-between p-3 border rounded">
-                  <div>
-                    <div className="font-medium">{(() => { try { const t=JSON.parse(r.transactionData); return `${t.type === 'income' ? '+' : '-'} ${t.amount} ${t.category}` } catch { return r.transactionData }})()}</div>
-                    <div className="text-sm text-gray-500">Next: {format(new Date(r.nextDueDate), 'PPP')}</div>
+                <div key={r.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors">
+                  <div className="flex-1">
+                    <div className="font-medium text-foreground">{(() => { try { const t=JSON.parse(r.transactionData); return `${t.type === 'income' ? '+' : '-'} ${t.amount} ${t.category}` } catch { return r.transactionData }})()}</div>
+                    <div className="text-sm text-muted-foreground">Frequency: {r.frequency}</div>
+                    <div className="text-sm text-muted-foreground">Next: {format(new Date(r.nextDueDate), 'PPP')}</div>
+                    <div className="text-sm">
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${r.isActive ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>
+                        {r.isActive ? 'Active' : 'Paused'}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => handleToggle(r.id, r.isActive)} className="px-3 py-1 border rounded">{r.isActive ? 'Pause' : 'Resume'}</button>
-                    <button onClick={() => handleDelete(r.id)} className="px-3 py-1 border rounded text-red-600">Delete</button>
+                    <button onClick={() => handleToggle(r.id, r.isActive)} className="px-4 py-2 border border-border text-foreground rounded-lg hover:bg-accent transition-colors font-medium">{r.isActive ? 'Pause' : 'Resume'}</button>
+                    <button onClick={() => handleDelete(r.id)} className="px-4 py-2 border border-destructive text-destructive rounded-lg hover:bg-destructive/10 transition-colors font-medium">Delete</button>
                   </div>
                 </div>
               ))}

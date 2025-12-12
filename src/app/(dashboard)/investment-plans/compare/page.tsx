@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ProtectedPage } from "@/components/ProtectedPage";
 import InvestmentPlanCompare from "@/components/InvestmentPlanCompare";
+import { toast } from "sonner";
 
 export default function InvestmentPlansComparePage() {
   const router = useRouter();
@@ -103,31 +104,31 @@ export default function InvestmentPlansComparePage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Compare Investment Plans</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Select two plans (original and what-if) to compare projections side-by-side. Save or discard the what-if scenario.</p>
+            <h1 className="text-3xl font-bold text-foreground">Compare Investment Plans</h1>
+            <p className="text-sm text-muted-foreground mt-2">Select two plans (original and what-if) to compare projections side-by-side. Save or discard the what-if scenario.</p>
           </div>
-          <Link href="/investment-plans" className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+          <Link href="/investment-plans" className="px-4 py-2 text-foreground hover:bg-accent rounded-lg transition-colors">
             Back
           </Link>
         </div>
 
         {error && (
-          <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 rounded-lg text-sm">
+          <div className="p-4 bg-destructive/10 border border-destructive/30 text-destructive rounded-lg text-sm">
             {error}
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white dark:bg-slate-900 p-4 rounded-lg border border-gray-200 dark:border-slate-800">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-card p-4 rounded-lg border border-border">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Original Plan</label>
-            <select value={leftId || ""} onChange={(e) => setLeftId(e.target.value || null)} className="w-full p-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg">
+            <label className="block text-sm font-medium text-foreground mb-2">Original Plan</label>
+            <select value={leftId || ""} onChange={(e) => setLeftId(e.target.value || null)} className="w-full p-2 border border-input bg-card text-foreground rounded-lg" aria-label="Select original investment plan">
               <option value="">Select original plan</option>
               {plans.filter(p => !p.name.includes('(copy)')).map((p:any) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">What-If Plan</label>
-            <select value={rightId || ""} onChange={(e) => setRightId(e.target.value || null)} className="w-full p-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg">
+            <label className="block text-sm font-medium text-foreground mb-2">What-If Plan</label>
+            <select value={rightId || ""} onChange={(e) => setRightId(e.target.value || null)} className="w-full p-2 border border-input bg-card text-foreground rounded-lg" aria-label="Select what-if investment plan">
               <option value="">Select what-if plan</option>
               {plans.filter(p => p.name.includes('(copy)')).map((p:any) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
@@ -137,18 +138,18 @@ export default function InvestmentPlansComparePage() {
         <InvestmentPlanCompare left={leftWithProj} right={rightWithProj} />
 
         {rightPlan && rightPlan.name.includes('(copy)') && (
-          <div className="flex gap-4 justify-center p-6 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg">
+          <div className="flex gap-4 justify-center p-6 bg-card border border-border rounded-lg">
             <button
               onClick={() => handleSavePlan(rightId)}
               disabled={savingId === rightId}
-              className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+              className="px-6 py-2 bg-success hover:bg-success/90 text-success-foreground rounded-lg font-medium transition-colors disabled:opacity-50"
             >
               Save What-If Plan
             </button>
             <button
               onClick={() => handleDiscardPlan(rightId)}
               disabled={savingId === rightId}
-              className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+              className="px-6 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg font-medium transition-colors disabled:opacity-50"
             >
               Discard Plan
             </button>

@@ -72,6 +72,14 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const validatedData = InvestmentPlanSchema.parse(normalized as any);
 
+    // Ensure dates are Date objects
+    const startDateValue = validatedData.startDate instanceof Date
+      ? validatedData.startDate
+      : new Date(validatedData.startDate);
+    const endDateValue = validatedData.endDate
+      ? (validatedData.endDate instanceof Date ? validatedData.endDate : new Date(validatedData.endDate))
+      : null;
+
     // Create investment plan
     const goalId = body.goalId || null;
     const plan = await prisma.investmentPlan.create({
@@ -84,9 +92,18 @@ export async function POST(request: NextRequest) {
         expectedReturnMax: validatedData.expectedReturnMax,
         compoundingFrequency: validatedData.compoundingFrequency,
         annualIncreasePercent: validatedData.annualIncreasePercent,
-        startDate: validatedData.startDate,
-        endDate: validatedData.endDate || null,
+        startDate: startDateValue,
+        endDate: endDateValue,
         status: validatedData.status || "active",
+      },
+    });
+
+    // Write audit log entry
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        eventType: "investment_plan_created",
+        details: JSON.stringify({ planId: plan.id, planName: plan.name, monthlyContribution: plan.monthlyContribution }),
       },
     });
 
@@ -134,19 +151,38 @@ export async function PUT(request: NextRequest, context: any) {
     // Validate request body
     const validatedData = InvestmentPlanUpdateSchema.parse(normalized as any);
 
+    // Prepare update data with proper Date conversion
+    const updateData: any = {};
+    if (validatedData.name !== undefined) updateData.name = validatedData.name;
+    if (validatedData.monthlyContribution !== undefined) updateData.monthlyContribution = validatedData.monthlyContribution;
+    if (validatedData.expectedReturnMin !== undefined) updateData.expectedReturnMin = validatedData.expectedReturnMin;
+    if (validatedData.expectedReturnMax !== undefined) updateData.expectedReturnMax = validatedData.expectedReturnMax;
+    if (validatedData.compoundingFrequency !== undefined) updateData.compoundingFrequency = validatedData.compoundingFrequency;
+    if (validatedData.annualIncreasePercent !== undefined) updateData.annualIncreasePercent = validatedData.annualIncreasePercent;
+    if (validatedData.status !== undefined) updateData.status = validatedData.status;
+    if (validatedData.startDate !== undefined) {
+      updateData.startDate = validatedData.startDate instanceof Date
+        ? validatedData.startDate
+        : new Date(validatedData.startDate);
+    }
+    if (validatedData.endDate !== undefined) {
+      updateData.endDate = validatedData.endDate
+        ? (validatedData.endDate instanceof Date ? validatedData.endDate : new Date(validatedData.endDate))
+        : null;
+    }
+
     // Update investment plan
     const plan = await prisma.investmentPlan.update({
       where: { id },
+      data: updateData,
+    });
+
+    // Write audit log entry
+    await prisma.auditLog.create({
       data: {
-        ...(validatedData.name !== undefined && { name: validatedData.name }),
-        ...(validatedData.monthlyContribution !== undefined && { monthlyContribution: validatedData.monthlyContribution }),
-        ...(validatedData.expectedReturnMin !== undefined && { expectedReturnMin: validatedData.expectedReturnMin }),
-        ...(validatedData.expectedReturnMax !== undefined && { expectedReturnMax: validatedData.expectedReturnMax }),
-        ...(validatedData.compoundingFrequency !== undefined && { compoundingFrequency: validatedData.compoundingFrequency }),
-        ...(validatedData.annualIncreasePercent !== undefined && { annualIncreasePercent: validatedData.annualIncreasePercent }),
-        ...(validatedData.startDate !== undefined && { startDate: validatedData.startDate }),
-        ...(validatedData.endDate !== undefined ? { endDate: validatedData.endDate } : {}),
-        ...(validatedData.status !== undefined && { status: validatedData.status }),
+        userId,
+        eventType: "investment_plan_updated",
+        details: JSON.stringify({ planId: plan.id, planName: plan.name, monthlyContribution: plan.monthlyContribution }),
       },
     });
 

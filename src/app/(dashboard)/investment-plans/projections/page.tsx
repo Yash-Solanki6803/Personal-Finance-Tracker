@@ -76,8 +76,7 @@ function InvestmentProjectionsContent() {
     annualReturnMin: number,
     annualReturnMax: number,
     years: number,
-    annualIncreasePercent: number,
-    compoundingFrequency: string
+    annualIncreasePercent: number
   ) => {
     const months = years * 12;
     const monthlyReturnMin = annualReturnMin / 100 / 12;
@@ -90,8 +89,8 @@ function InvestmentProjectionsContent() {
       let currentMonthlyContribution = monthlyContribution;
 
       for (let month = 1; month <= months; month++) {
-        // Apply annual increase every 12 months
-        if (month > 1 && (month - 1) % 12 === 0) {
+        // Apply annual increase at the start of each year (month 13, 25, 37, etc.)
+        if (month > 12 && (month - 1) % 12 === 0) {
           currentMonthlyContribution *= 1 + annualIncreasePercent / 100;
         }
 
@@ -141,8 +140,7 @@ function InvestmentProjectionsContent() {
         plan.expectedReturnMin || 0,
         plan.expectedReturnMax || plan.expectedReturnMin || 0,
         timeHorizon,
-        plan.annualIncreasePercent || 0,
-        plan.compoundingFrequency || "monthly"
+        plan.annualIncreasePercent || 0
       );
 
       projectionMin.forEach((point, index) => {
@@ -202,21 +200,21 @@ function InvestmentProjectionsContent() {
     );
   };
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ color: string; name: string; value: number; payload: { year: number; valueMin?: number; valueMax?: number } }> }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-3 shadow-lg">
-          <p className="font-semibold text-gray-900 dark:text-white mb-2">
+        <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
+          <p className="font-semibold text-foreground mb-2">
             Year {payload[0].payload.year}
           </p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {entry.name}: {formatCurrency(entry.value)}
             </p>
           ))}
           {payload[0].payload.valueMin && payload[0].payload.valueMax && (
             <>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 Range: {formatCurrency(payload[0].payload.valueMin)} -{" "}
                 {formatCurrency(payload[0].payload.valueMax)}
               </p>
@@ -231,15 +229,15 @@ function InvestmentProjectionsContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="text-gray-500 dark:text-gray-400">Loading projections...</div>
+        <div className="text-muted-foreground">Loading projections...</div>
       </div>
     );
   }
 
   if (plans.length === 0) {
     return (
-      <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-8 text-center">
-        <p className="text-gray-600 dark:text-gray-400">
+      <div className="bg-card rounded-lg border border-border p-8 text-center">
+        <p className="text-muted-foreground">
           No active investment plans found. Create a plan to see projections.
         </p>
       </div>
@@ -250,38 +248,38 @@ function InvestmentProjectionsContent() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-3xl font-bold text-foreground">
           Investment Projections
         </h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+        <p className="text-sm text-muted-foreground mt-2">
           Visualize your investment growth over time with interactive charts.
         </p>
       </div>
 
       {/* Controls */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
+      <div className="bg-card rounded-lg border border-border p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Plan Selection */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+            <label className="block text-sm font-semibold text-foreground mb-3">
               Select Investment Plans
             </label>
-            <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-slate-700 rounded-lg p-3">
+            <div className="space-y-2 max-h-48 overflow-y-auto border border-border rounded-lg p-3">
               {plans.map((plan) => (
                 <label
                   key={plan.id}
-                  className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 p-2 rounded"
+                  className="flex items-center space-x-2 cursor-pointer hover:bg-accent p-2 rounded"
                 >
                   <input
                     type="checkbox"
                     checked={selectedPlanIds.includes(plan.id)}
                     onChange={() => togglePlan(plan.id)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-border text-primary focus:ring-ring"
                   />
-                  <span className="text-sm text-gray-900 dark:text-white">
+                  <span className="text-sm text-foreground">
                     {plan.name}
                   </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-muted-foreground">
                     ({formatCurrency(plan.monthlyContribution)}/mo)
                   </span>
                 </label>
@@ -290,13 +288,13 @@ function InvestmentProjectionsContent() {
             <div className="flex gap-2 mt-3">
               <button
                 onClick={handleSelectAll}
-                className="text-xs px-3 py-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                className="text-xs px-3 py-1 text-primary hover:bg-primary/10 rounded transition-colors"
               >
                 Select All
               </button>
               <button
                 onClick={handleDeselectAll}
-                className="text-xs px-3 py-1 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 rounded transition-colors"
+                className="text-xs px-3 py-1 text-muted-foreground hover:bg-accent rounded transition-colors"
               >
                 Deselect All
               </button>
@@ -305,7 +303,7 @@ function InvestmentProjectionsContent() {
 
           {/* Time Horizon */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+            <label className="block text-sm font-semibold text-foreground mb-3">
               Time Horizon
             </label>
             <div className="space-y-3">
@@ -316,8 +314,8 @@ function InvestmentProjectionsContent() {
                     onClick={() => setTimeHorizon(years)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       timeHorizon === years
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-secondary-foreground hover:bg-accent"
                     }`}
                   >
                     {years} Years
@@ -325,7 +323,7 @@ function InvestmentProjectionsContent() {
                 ))}
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-600 dark:text-gray-400">
+                <label className="text-sm text-muted-foreground">
                   Custom:
                 </label>
                 <input
@@ -340,9 +338,10 @@ function InvestmentProjectionsContent() {
                       setTimeHorizon(years);
                     }
                   }}
-                  className="w-20 px-3 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg text-sm"
+                  className="w-20 px-3 py-2 border border-input bg-card text-foreground rounded-lg text-sm"
+                  aria-label="Custom projection years"
                 />
-                <span className="text-sm text-gray-600 dark:text-gray-400">years</span>
+                <span className="text-sm text-muted-foreground">years</span>
               </div>
             </div>
           </div>
@@ -351,8 +350,8 @@ function InvestmentProjectionsContent() {
 
       {/* Chart */}
       {selectedPlanIds.length > 0 && projectionData.length > 0 && (
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+        <div className="bg-card rounded-lg border border-border p-6">
+          <h2 className="text-xl font-bold text-card-foreground mb-6">
             Projection Chart
           </h2>
           <ResponsiveContainer width="100%" height={400}>
@@ -440,24 +439,24 @@ function InvestmentProjectionsContent() {
 
       {/* Year-wise Breakdown Table */}
       {selectedPlanIds.length > 0 && projectionData.length > 0 && (
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+        <div className="bg-card rounded-lg border border-border p-6">
+          <h2 className="text-xl font-bold text-card-foreground mb-6">
             Year-wise Breakdown
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-slate-700">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">
                     Year
                   </th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">
                     Contribution
                   </th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">
                     Interest Earned
                   </th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">
                     Total Value
                   </th>
                 </tr>
@@ -466,15 +465,15 @@ function InvestmentProjectionsContent() {
                 {projectionData.map((row) => (
                   <tr
                     key={row.year}
-                    className="border-b border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800"
+                    className="border-b border-border hover:bg-secondary transition-colors"
                   >
-                    <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
+                    <td className="py-3 px-4 text-sm text-foreground">
                       {row.year}
                     </td>
-                    <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white">
+                    <td className="py-3 px-4 text-sm text-right text-foreground">
                       {formatCurrency(row.invested)}
                     </td>
-                    <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white">
+                    <td className="py-3 px-4 text-sm text-right text-foreground">
                       {row.interestMin && row.interestMax ? (
                         <span>
                           {formatCurrency(row.interestMin)} -{" "}
@@ -484,7 +483,7 @@ function InvestmentProjectionsContent() {
                         formatCurrency(row.interest)
                       )}
                     </td>
-                    <td className="py-3 px-4 text-sm text-right font-semibold text-gray-900 dark:text-white">
+                    <td className="py-3 px-4 text-sm text-right font-semibold text-foreground">
                       {row.valueMin && row.valueMax ? (
                         <span>
                           {formatCurrency(row.valueMin)} -{" "}
@@ -503,8 +502,8 @@ function InvestmentProjectionsContent() {
       )}
 
       {selectedPlanIds.length === 0 && (
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-8 text-center">
-          <p className="text-gray-600 dark:text-gray-400">
+        <div className="bg-card rounded-lg border border-border p-8 text-center">
+          <p className="text-muted-foreground">
             Select at least one investment plan to view projections.
           </p>
         </div>
@@ -520,4 +519,3 @@ export default function InvestmentProjectionsPage() {
     </ProtectedPage>
   );
 }
-

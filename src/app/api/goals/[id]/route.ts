@@ -84,6 +84,15 @@ export async function PUT(request: NextRequest, context: any) {
       data: updateData,
     });
 
+    // Write audit log entry
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        eventType: "goal_updated",
+        details: JSON.stringify({ goalId: goal.id, goalName: goal.name, targetAmount: goal.targetAmount }),
+      },
+    });
+
     return successResponse(goal, "Goal updated successfully");
   } catch (error) {
     if (error instanceof Error && "errors" in error) {
@@ -113,11 +122,27 @@ export async function DELETE(request: NextRequest, context: any) {
       return errorResponse("Goal not found or unauthorized", 404);
     }
 
-    const goal = await prisma.goal.delete({
+    // Store goal details before deletion for audit log
+    const goalDetails = {
+      id: existingGoal.id,
+      name: existingGoal.name,
+      targetAmount: existingGoal.targetAmount,
+    };
+
+    await prisma.goal.delete({
       where: { id },
     });
 
-    return successResponse(goal, "Goal deleted successfully");
+    // Write audit log entry
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        eventType: "goal_deleted",
+        details: JSON.stringify(goalDetails),
+      },
+    });
+
+    return successResponse(goalDetails, "Goal deleted successfully");
   } catch (error) {
     return handleApiError(error, "DELETE /api/goals/[id]");
   }

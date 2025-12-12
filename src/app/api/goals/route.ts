@@ -35,7 +35,16 @@ export async function GET(request: NextRequest) {
       orderBy: { targetDate: "asc" },
     });
 
-    return successResponse(goals, "Goals retrieved successfully");
+    // Attach backend-driven progress to each goal
+    const { getGoalProgress } = await import("@/lib/financial-calculations");
+    const goalsWithProgress = await Promise.all(
+      goals.map(async (goal) => ({
+        ...goal,
+        progress: await getGoalProgress(userId, goal.id),
+      }))
+    );
+
+    return successResponse(goalsWithProgress, "Goals retrieved successfully");
   } catch (error) {
     return handleApiError(error, "GET /api/goals");
   }
@@ -65,15 +74,29 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const validatedData = GoalSchema.parse(normalized as any);
 
+    // Ensure targetDate is a Date object
+    const targetDateValue = validatedData.targetDate instanceof Date
+      ? validatedData.targetDate
+      : new Date(validatedData.targetDate);
+
     // Create goal
     const goal = await prisma.goal.create({
       data: {
         userId,
         name: validatedData.name,
         targetAmount: validatedData.targetAmount,
-        targetDate: validatedData.targetDate,
+        targetDate: targetDateValue,
         description: validatedData.description ?? null,
         status: validatedData.status || "on_track",
+      },
+    });
+
+    // Write audit log entry
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        eventType: "goal_created",
+        details: JSON.stringify({ goalId: goal.id, goalName: goal.name, targetAmount: goal.targetAmount }),
       },
     });
 

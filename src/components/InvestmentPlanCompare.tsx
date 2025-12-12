@@ -39,7 +39,7 @@ export default function InvestmentPlanCompare({ left, right }: { left: any; righ
 
   return (
     <div className="space-y-4">
-      <div className="h-64 bg-white dark:bg-slate-900 rounded-lg border p-4">
+      <div className="h-64 bg-card rounded-lg border border-border p-4">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -53,10 +53,10 @@ export default function InvestmentPlanCompare({ left, right }: { left: any; righ
         </ResponsiveContainer>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-lg border p-4">
+      <div className="bg-card rounded-lg border border-border p-4">
         <table className="w-full text-sm">
           <thead>
-            <tr>
+            <tr className="text-foreground">
               <th className="text-left">Month</th>
               <th className="text-right">{left?.name || 'Plan A'}</th>
               <th className="text-right">{right?.name || 'Plan B'}</th>
@@ -64,7 +64,7 @@ export default function InvestmentPlanCompare({ left, right }: { left: any; righ
           </thead>
           <tbody>
             {data.map((row) => (
-              <tr key={row.month} className="border-t">
+              <tr key={row.month} className="border-t border-border text-muted-foreground">
                 <td>{row.month}</td>
                 <td className="text-right">{formatCurrency(row.left || 0)}</td>
                 <td className="text-right">{formatCurrency(row.right || 0)}</td>

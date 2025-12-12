@@ -1,3 +1,10 @@
+model AuditLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  eventType String   // e.g. 'transaction_created', 'salary_credited', 'recurring_processed'
+  details   String   // JSON string for event details
+  createdAt DateTime @default(now())
+}
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -32,7 +39,7 @@ model User {
 model Category {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String   @unique
-  type      String   // income, expense
+  type      String   // income, expense, investment, transfer
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -40,23 +47,25 @@ model Category {
 }
 
 model Transaction {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amount    Float
-  category  String
-  type      String   // income, expense
-  date      DateTime
-  description String?
-  recurringId String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String   @db.ObjectId
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount           Float
+  category         String
+  type             String   // income, expense, investment, transfer
+  date             DateTime
+  description      String?
+  recurringId      String?
+  investmentPlanId String?  @db.ObjectId
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@index([userId])
   @@index([date])
   @@index([category])
   @@index([type])
   @@index([recurringId])
+  @@index([investmentPlanId])
 }
 
 model InvestmentPlan {
@@ -79,6 +88,23 @@ model InvestmentPlan {
   @@index([userId])
   @@index([goalId])
   @@index([status])
+}
+
+model InvestmentTransaction {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String   @db.ObjectId
+  investmentPlanId    String   @db.ObjectId
+  transactionId       String   @db.ObjectId
+  month               Int      // 1-12
+  year                Int
+  amount              Float
+  isMonthlyInvestment Boolean  @default(true)  // false for additional investments
+  createdAt           DateTime @default(now())
+
+  @@unique([investmentPlanId, year, month, isMonthlyInvestment])
+  @@index([userId])
+  @@index([investmentPlanId])
+  @@index([year, month])
 }
 
 model BudgetRule {

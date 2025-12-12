@@ -22,21 +22,46 @@ interface CashFlowProjection {
   investments: number;
   balance: number;
   cumulativeBalance: number;
-  totalContributed?: number; // invested amount without interest
-  projectedInvestmentValue?: number; // invested value with growth
+  totalContributed?: number;
+  totalInvestmentValue?: number;
+  projectedInvestmentValue?: number;
+}
+
+interface InvestmentPlan {
+  id: string;
+  monthlyContribution: number;
+  annualIncreasePercent?: number;
+  startDate?: string;
+  startedMonthsAgo?: number;
+}
+
+interface RecurringTransaction {
+  id: string;
+  transactionData: string;
+  frequency: string;
+  nextDueDate: string;
+  isActive: boolean;
+  title?: string;
+}
+
+interface Transaction {
+  id: string;
+  amount: number;
+  type: string;
+  date: string;
+  category?: string;
+  description?: string;
 }
 
 function CashFlowPageContent() {
   const [salary, setSalary] = useState<number>(0);
   const [averageExpenses, setAverageExpenses] = useState<number>(0);
-  const [investmentPlans, setInvestmentPlans] = useState<any[]>([]);
-  const [recurringTransactions, setRecurringTransactions] = useState<any[]>([]);
+  const [investmentPlans, setInvestmentPlans] = useState<InvestmentPlan[]>([]);
+  const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
   const [projectionMonths, setProjectionMonths] = useState<number>(12);
   const [includeRecurring, setIncludeRecurring] = useState<boolean>(true);
   const [loading, setLoading] = useState(true);
-
-  // Extra user-controllable assumption: expected annual return for projections
-  const [expectedAnnualReturn, setExpectedAnnualReturn] = useState<number>(6); // percent
+  const [expectedAnnualReturn, setExpectedAnnualReturn] = useState<number>(6);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,17 +85,16 @@ function CashFlowPageContent() {
           const transactionsData = await transactionsRes.json();
           if (transactionsData.success) {
             const payload = transactionsData.data;
-            const list = Array.isArray(payload)
+            const list: Transaction[] = Array.isArray(payload)
               ? payload
               : Array.isArray(payload?.transactions)
               ? payload.transactions
               : [];
 
-            // Calculate average monthly expenses (last 3 months)
             const now = new Date();
             const threeMonthsAgo = addMonths(now, -3);
             const recentExpenses = list.filter(
-              (t: any) =>
+              (t) =>
                 t.type === "expense" &&
                 new Date(t.date) >= threeMonthsAgo &&
                 new Date(t.date) <= now
@@ -78,21 +102,20 @@ function CashFlowPageContent() {
 
             if (recentExpenses.length > 0) {
               const totalExpenses = recentExpenses.reduce(
-                (sum: number, t: any) => sum + t.amount,
+                (sum, t) => sum + t.amount,
                 0
               );
               const months = 3;
               setAverageExpenses(totalExpenses / months);
             } else {
-              // Fallback: calculate from all expenses
-              const allExpenses = list.filter((t: any) => t.type === "expense");
+              const allExpenses = list.filter((t) => t.type === "expense");
               if (allExpenses.length > 0) {
                 const totalExpenses = allExpenses.reduce(
-                  (sum: number, t: any) => sum + t.amount,
+                  (sum, t) => sum + t.amount,
                   0
                 );
                 const oldestDate = new Date(
-                  Math.min(...allExpenses.map((t: any) => new Date(t.date).getTime()))
+                  Math.min(...allExpenses.map((t) => new Date(t.date).getTime()))
                 );
                 const months = Math.max(
                   1,
@@ -128,7 +151,6 @@ function CashFlowPageContent() {
     fetchData();
   }, []);
 
-  // Calculate total monthly investment contributions (base)
   const totalMonthlyInvestments = useMemo(() => {
     return investmentPlans.reduce(
       (sum, plan) => sum + (plan.monthlyContribution || 0),
@@ -136,7 +158,6 @@ function CashFlowPageContent() {
     );
   }, [investmentPlans]);
 
-  // Calculate invested to date from plans (based on plan.startDate if present)
   const totalInvestedToDate = useMemo(() => {
     const now = new Date();
     let total = 0;
@@ -149,10 +170,8 @@ function CashFlowPageContent() {
       if (start && !isNaN(start.getTime())) {
         monthsActive = Math.max(0, differenceInMonths(now, start) + 1);
       } else if (plan.startedMonthsAgo) {
-        // fallback if API provides startedMonthsAgo
         monthsActive = plan.startedMonthsAgo;
       } else {
-        // assume starts this month -> 0 months invested to date
         monthsActive = 0;
       }
 
@@ -162,7 +181,6 @@ function CashFlowPageContent() {
     return total;
   }, [investmentPlans]);
 
-  // Calculate recurring transaction amounts
   const recurringAmounts = useMemo(() => {
     if (!includeRecurring) return { income: 0, expense: 0 };
 
@@ -185,60 +203,10 @@ function CashFlowPageContent() {
     return { income, expense };
   }, [recurringTransactions, includeRecurring]);
 
-  // Helper: build investment projection values (projected future value of contributions)
   const projectedInvestmentsSummary = useMemo(() => {
-    // We'll compute: totalProjectedContributions and projectedFutureValue using monthly compounding
-    const annualReturn = Math.max(0, expectedAnnualReturn) / 100;
-    const monthlyReturn = Math.pow(1 + annualReturn, 1 / 12) - 1; // monthly equivalent
-
-    // Determine an annualIncrease for contributions — if plans provide annualIncreasePercent use weighted average
-    let weightedIncreaseSum = 0;
-    let weight = 0;
-    investmentPlans.forEach((p) => {
-      const contrib = p.monthlyContribution || 0;
-      const ai = p.annualIncreasePercent || 0; // e.g. 5 for 5%
-      if (contrib > 0) {
-        weightedIncreaseSum += ai * contrib;
-        weight += contrib;
-      }
-    });
-    const avgAnnualIncrease = weight > 0 ? weightedIncreaseSum / weight / 100 : 0; // decimal
-
-    // Project month by month (contribution may increase yearly by avgAnnualIncrease)
-    let projectedFutureValue = 0;
-    let totalProjectedContributions = 0;
-
-    for (let m = 0; m < projectionMonths; m++) {
-      const yearIndex = Math.floor(m / 12);
-      const multiplier = Math.pow(1 + avgAnnualIncrease, yearIndex);
-      const monthlyContributionThisMonth = totalMonthlyInvestments * multiplier;
-
-      // futureValue accumulation: existing value grows, then new contribution added
-      projectedFutureValue = projectedFutureValue * (1 + monthlyReturn) + monthlyContributionThisMonth;
-      totalProjectedContributions += monthlyContributionThisMonth;
-    }
-
-    return {
-      avgAnnualIncreasePercent: Math.round(avgAnnualIncrease * 10000) / 100, // show as percentage
-      totalProjectedContributions: roundToDecimal(totalProjectedContributions),
-      totalProjectedContributionsInclToDate: roundToDecimal(totalProjectedContributions + totalInvestedToDate),
-      projectedFutureValue: roundToDecimal(projectedFutureValue + totalInvestedToDate), // include invested to date
-    };
-  }, [investmentPlans, totalMonthlyInvestments, projectionMonths, expectedAnnualReturn, totalInvestedToDate]);
-
-  // Generate cash flow projection
-  const projectionData = useMemo(() => {
-    const data: CashFlowProjection[] = [];
-    let cumulativeBalance = 0;
-    const startDate = new Date();
-
-    // For monthly projected investment value we will replicate the logic from projectedInvestmentsSummary
     const annualReturn = Math.max(0, expectedAnnualReturn) / 100;
     const monthlyReturn = Math.pow(1 + annualReturn, 1 / 12) - 1;
 
-    let projectedInvestmentValue = totalInvestedToDate; // start with what already invested
-
-    // average annual increase (decimal)
     let weightedIncreaseSum = 0;
     let weight = 0;
     investmentPlans.forEach((p) => {
@@ -251,28 +219,68 @@ function CashFlowPageContent() {
     });
     const avgAnnualIncrease = weight > 0 ? weightedIncreaseSum / weight / 100 : 0;
 
-    // cumulative contributed (no interest) starts with invested to date
+    let projectedFutureValue = 0;
+    let totalProjectedContributions = 0;
+    let currentMonthlyContribution = totalMonthlyInvestments;
+
+    for (let m = 0; m < projectionMonths; m++) {
+      if (m > 0 && m % 12 === 0) {
+        currentMonthlyContribution *= 1 + avgAnnualIncrease;
+      }
+
+      projectedFutureValue = (projectedFutureValue + currentMonthlyContribution) * (1 + monthlyReturn);
+      totalProjectedContributions += currentMonthlyContribution;
+    }
+
+    return {
+      avgAnnualIncreasePercent: Math.round(avgAnnualIncrease * 10000) / 100,
+      totalProjectedContributions: roundToDecimal(totalProjectedContributions),
+      totalProjectedContributionsInclToDate: roundToDecimal(totalProjectedContributions + totalInvestedToDate),
+      projectedFutureValue: roundToDecimal(projectedFutureValue + totalInvestedToDate),
+    };
+  }, [investmentPlans, totalMonthlyInvestments, projectionMonths, expectedAnnualReturn, totalInvestedToDate]);
+
+  const projectionData = useMemo(() => {
+    const data: CashFlowProjection[] = [];
+    let cumulativeBalance = 0;
+    const startDate = new Date();
+
+    const annualReturn = Math.max(0, expectedAnnualReturn) / 100;
+    const monthlyReturn = Math.pow(1 + annualReturn, 1 / 12) - 1;
+
+    let projectedInvestmentValue = totalInvestedToDate;
+
+    let weightedIncreaseSum = 0;
+    let weight = 0;
+    investmentPlans.forEach((p) => {
+      const contrib = p.monthlyContribution || 0;
+      const ai = p.annualIncreasePercent || 0;
+      if (contrib > 0) {
+        weightedIncreaseSum += ai * contrib;
+        weight += contrib;
+      }
+    });
+    const avgAnnualIncrease = weight > 0 ? weightedIncreaseSum / weight / 100 : 0;
+
     let cumulativeContributed = totalInvestedToDate;
+    let currentMonthlyInvestments = totalMonthlyInvestments;
 
     for (let i = 0; i < projectionMonths; i++) {
       const monthDate = addMonths(startDate, i);
       const monthKey = format(monthDate, "MMM yyyy");
 
+      if (i > 0 && i % 12 === 0) {
+        currentMonthlyInvestments *= 1 + avgAnnualIncrease;
+      }
+
       const monthlyIncome = salary + recurringAmounts.income;
       const monthlyExpenses = averageExpenses + recurringAmounts.expense;
 
-      // Monthly investments may increase annually by avgAnnualIncrease on each plan
-      const yearIndex = Math.floor(i / 12);
-      const multiplier = Math.pow(1 + avgAnnualIncrease, yearIndex);
-      const monthlyInvestments = totalMonthlyInvestments * multiplier;
+      projectedInvestmentValue = (projectedInvestmentValue + currentMonthlyInvestments) * (1 + monthlyReturn);
 
-      // update projectedInvestmentValue (with interest)
-      projectedInvestmentValue = projectedInvestmentValue * (1 + monthlyReturn) + monthlyInvestments;
+      cumulativeContributed += currentMonthlyInvestments;
 
-      // update cumulativeContributed (without interest)
-      cumulativeContributed += monthlyInvestments;
-
-      const netCashFlow = monthlyIncome - monthlyExpenses - monthlyInvestments;
+      const netCashFlow = monthlyIncome - monthlyExpenses - currentMonthlyInvestments;
 
       cumulativeBalance += netCashFlow;
 
@@ -280,11 +288,11 @@ function CashFlowPageContent() {
         month: monthKey,
         income: roundToDecimal(monthlyIncome),
         expenses: roundToDecimal(monthlyExpenses),
-        investments: roundToDecimal(monthlyInvestments),
+        investments: roundToDecimal(currentMonthlyInvestments),
         balance: roundToDecimal(netCashFlow),
         cumulativeBalance: roundToDecimal(cumulativeBalance),
         totalContributed: roundToDecimal(cumulativeContributed),
-        projectedInvestmentValue: roundToDecimal(projectedInvestmentValue),
+        totalInvestmentValue: roundToDecimal(projectedInvestmentValue),
       });
     }
 
@@ -294,7 +302,7 @@ function CashFlowPageContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="text-gray-500 dark:text-gray-400">Loading cash flow data...</div>
+        <div className="text-muted-foreground">Loading cash flow data...</div>
       </div>
     );
   }
@@ -303,8 +311,8 @@ function CashFlowPageContent() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Cash Flow Projection</h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+        <h1 className="text-3xl font-bold text-foreground">Cash Flow Projection</h1>
+        <p className="text-sm text-muted-foreground mt-2">
           Project your cash flow for the next 12-60 months based on current salary, expenses, and
           investments. Projections include simple monthly compounding on investments using expected
           annual return.
@@ -312,10 +320,10 @@ function CashFlowPageContent() {
       </div>
 
       {/* Controls */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
+      <div className="bg-card rounded-lg border border-border p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Projection Period</label>
+            <label className="block text-sm font-semibold text-foreground mb-3">Projection Period</label>
             <div className="flex gap-2">
               {[12, 24, 36, 48, 60].map((months) => (
                 <button
@@ -323,8 +331,8 @@ function CashFlowPageContent() {
                   onClick={() => setProjectionMonths(months)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     projectionMonths === months
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground hover:bg-accent"
                   }`}
                 >
                   {months}M
@@ -334,52 +342,53 @@ function CashFlowPageContent() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Options</label>
+            <label className="block text-sm font-semibold text-foreground mb-3">Options</label>
             <label className="flex items-center space-x-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={includeRecurring}
                 onChange={(e) => setIncludeRecurring(e.target.checked)}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="rounded border-border text-primary focus:ring-ring"
               />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Include Recurring Transactions</span>
+              <span className="text-sm text-foreground">Include Recurring Transactions</span>
             </label>
 
             <div className="mt-4">
-              <label className="block text-sm text-gray-600 dark:text-gray-400">Expected annual return (%)</label>
+              <label className="block text-sm text-muted-foreground">Expected annual return (%)</label>
               <input
                 type="number"
                 value={expectedAnnualReturn}
                 onChange={(e) => setExpectedAnnualReturn(Number(e.target.value))}
-                className="mt-1 block w-40 rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm p-2"
+                className="mt-1 block w-40 rounded-md border border-input bg-card text-foreground text-sm p-2"
+                aria-label="Expected annual return percentage"
               />
             </div>
           </div>
         </div>
 
         {/* Assumptions Display */}
-        <div className="mt-6 p-4 bg-gray-50 dark:bg-slate-800 rounded-lg">
-          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Projection Assumptions</h3>
+        <div className="mt-6 p-4 bg-secondary rounded-lg">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Projection Assumptions</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
             <div>
-              <span className="text-gray-600 dark:text-gray-400">Monthly Salary:</span>
-              <span className="font-semibold text-gray-900 dark:text-white ml-2">{formatCurrency(salary)}</span>
+              <span className="text-muted-foreground">Monthly Salary:</span>
+              <span className="font-semibold text-foreground ml-2">{formatCurrency(salary)}</span>
             </div>
             <div>
-              <span className="text-gray-600 dark:text-gray-400">Avg. Monthly Expenses:</span>
-              <span className="font-semibold text-gray-900 dark:text-white ml-2">{formatCurrency(averageExpenses)}</span>
+              <span className="text-muted-foreground">Avg. Monthly Expenses:</span>
+              <span className="font-semibold text-foreground ml-2">{formatCurrency(averageExpenses)}</span>
             </div>
             <div>
-              <span className="text-gray-600 dark:text-gray-400">Monthly Investments:</span>
-              <span className="font-semibold text-gray-900 dark:text-white ml-2">{formatCurrency(totalMonthlyInvestments)}</span>
+              <span className="text-muted-foreground">Monthly Investments:</span>
+              <span className="font-semibold text-foreground ml-2">{formatCurrency(totalMonthlyInvestments)}</span>
             </div>
             <div>
-              <span className="text-gray-600 dark:text-gray-400">Invested to date:</span>
-              <span className="font-semibold text-gray-900 dark:text-white ml-2">{formatCurrency(totalInvestedToDate)}</span>
+              <span className="text-muted-foreground">Invested to date:</span>
+              <span className="font-semibold text-foreground ml-2">{formatCurrency(totalInvestedToDate)}</span>
             </div>
           </div>
 
-          <div className="mt-4 text-sm text-gray-700 dark:text-gray-300">
+          <div className="mt-4 text-sm text-foreground">
             <div>Projected contribution increase (avg yearly): {projectedInvestmentsSummary.avgAnnualIncreasePercent}%</div>
             <div>Projected contributions over period (new): {formatCurrency(projectedInvestmentsSummary.totalProjectedContributions)}</div>
             <div>Total contributed including past: {formatCurrency(projectedInvestmentsSummary.totalProjectedContributionsInclToDate)}</div>
@@ -390,8 +399,8 @@ function CashFlowPageContent() {
 
       {/* Cash Flow Chart */}
       {projectionData.length > 0 && (
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Projected Cash Flow</h2>
+        <div className="bg-card rounded-lg border border-border p-6">
+          <h2 className="text-xl font-bold text-card-foreground mb-6">Projected Cash Flow</h2>
           <ResponsiveContainer width="100%" height={440}>
             <LineChart data={projectionData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -412,33 +421,33 @@ function CashFlowPageContent() {
 
       {/* Projection Table */}
       {projectionData.length > 0 && (
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Monthly Projection Details</h2>
+        <div className="bg-card rounded-lg border border-border p-6">
+          <h2 className="text-xl font-bold text-card-foreground mb-6">Monthly Projection Details</h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-slate-700">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Month</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Income</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Expenses</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Investments</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Net Flow</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Cumulative</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Total Contributed</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Projected Invested Value</th>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">Month</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Income</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Expenses</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Investments</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Net Flow</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Cumulative</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Total Contributed</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Projected Invested Value</th>
                 </tr>
               </thead>
               <tbody>
                 {projectionData.map((row, index) => (
-                  <tr key={index} className="border-b border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800">
-                    <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">{row.month}</td>
-                    <td className="py-3 px-4 text-sm text-right text-green-600 dark:text-green-400">{formatCurrency(row.income)}</td>
-                    <td className="py-3 px-4 text-sm text-right text-red-600 dark:text-red-400">{formatCurrency(row.expenses)}</td>
-                    <td className="py-3 px-4 text-sm text-right text-yellow-600 dark:text-yellow-400">{formatCurrency(row.investments)}</td>
-                    <td className={`py-3 px-4 text-sm text-right font-semibold ${row.balance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>{formatCurrency(row.balance)}</td>
-                    <td className={`py-3 px-4 text-sm text-right font-semibold ${row.cumulativeBalance >= 0 ? "text-blue-600 dark:text-blue-400" : "text-red-600 dark:text-red-400"}`}>{formatCurrency(row.cumulativeBalance)}</td>
-                    <td className="py-3 px-4 text-sm text-right font-medium text-gray-700 dark:text-gray-300">{formatCurrency(row.totalContributed || 0)}</td>
-                    <td className="py-3 px-4 text-sm text-right font-medium text-purple-600 dark:text-purple-400">{formatCurrency(row.projectedInvestmentValue || 0)}</td>
+                  <tr key={index} className="border-b border-border hover:bg-secondary transition-colors">
+                    <td className="py-3 px-4 text-sm text-foreground">{row.month}</td>
+                    <td className="py-3 px-4 text-sm text-right text-success">{formatCurrency(row.income)}</td>
+                    <td className="py-3 px-4 text-sm text-right text-destructive">{formatCurrency(row.expenses)}</td>
+                    <td className="py-3 px-4 text-sm text-right text-warning">{formatCurrency(row.investments)}</td>
+                    <td className={`py-3 px-4 text-sm text-right font-semibold ${row.balance >= 0 ? "text-success" : "text-destructive"}`}>{formatCurrency(row.balance)}</td>
+                    <td className={`py-3 px-4 text-sm text-right font-semibold ${row.cumulativeBalance >= 0 ? "text-primary" : "text-destructive"}`}>{formatCurrency(row.cumulativeBalance)}</td>
+                    <td className="py-3 px-4 text-sm text-right font-medium text-muted-foreground">{formatCurrency(row.totalContributed || 0)}</td>
+                    <td className="py-3 px-4 text-sm text-right font-medium text-accent-foreground">{formatCurrency(row.projectedInvestmentValue || 0)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -448,37 +457,37 @@ function CashFlowPageContent() {
       )}
 
       {/* Recurring Transactions / Diagnostics */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Cash Flow Diagnostics</h2>
+      <div className="bg-card rounded-lg border border-border p-6">
+        <h2 className="text-xl font-bold text-card-foreground mb-4">Cash Flow Diagnostics</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div className="p-4 bg-gray-50 dark:bg-slate-800 rounded">
-            <div className="text-gray-600 dark:text-gray-300">Recurring Income (monthly)</div>
-            <div className="text-lg font-semibold">{formatCurrency(recurringAmounts.income)}</div>
+          <div className="p-4 bg-secondary rounded">
+            <div className="text-muted-foreground">Recurring Income (monthly)</div>
+            <div className="text-lg font-semibold text-foreground">{formatCurrency(recurringAmounts.income)}</div>
           </div>
-          <div className="p-4 bg-gray-50 dark:bg-slate-800 rounded">
-            <div className="text-gray-600 dark:text-gray-300">Recurring Expense (monthly)</div>
-            <div className="text-lg font-semibold">{formatCurrency(recurringAmounts.expense)}</div>
+          <div className="p-4 bg-secondary rounded">
+            <div className="text-muted-foreground">Recurring Expense (monthly)</div>
+            <div className="text-lg font-semibold text-foreground">{formatCurrency(recurringAmounts.expense)}</div>
           </div>
-          <div className="p-4 bg-gray-50 dark:bg-slate-800 rounded">
-            <div className="text-gray-600 dark:text-gray-300">Average Expense (monthly)</div>
-            <div className="text-lg font-semibold">{formatCurrency(averageExpenses)}</div>
+          <div className="p-4 bg-secondary rounded">
+            <div className="text-muted-foreground">Average Expense (monthly)</div>
+            <div className="text-lg font-semibold text-foreground">{formatCurrency(averageExpenses)}</div>
           </div>
         </div>
 
         <div className="mt-6">
-          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Recurring Transactions</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-2">Recurring Transactions</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-gray-500 dark:text-gray-400">
+                <tr className="text-left text-xs text-muted-foreground">
                   <th className="py-2 px-3">Title</th>
                   <th className="py-2 px-3 text-right">Amount</th>
                   <th className="py-2 px-3">Type</th>
                 </tr>
               </thead>
               <tbody>
-                {recurringTransactions.map((rt: any, idx: number) => {
-                  let parsed: any = null;
+                {recurringTransactions.map((rt, idx: number) => {
+                  let parsed: { title?: string; amount?: number; type?: string } = { title: "-", amount: 0, type: "expense" };
                   try {
                     parsed = JSON.parse(rt.transactionData);
                   } catch {
@@ -486,10 +495,10 @@ function CashFlowPageContent() {
                   }
 
                   return (
-                    <tr key={idx} className="border-t border-gray-100 dark:border-slate-800">
-                      <td className="py-2 px-3">{parsed.title || rt.title || "Recurring"}</td>
-                      <td className="py-2 px-3 text-right">{formatCurrency(parsed.amount || 0)}</td>
-                      <td className="py-2 px-3">{parsed.type || "expense"}</td>
+                    <tr key={idx} className="border-t border-border">
+                      <td className="py-2 px-3 text-foreground">{parsed.title || rt.title || "Recurring"}</td>
+                      <td className="py-2 px-3 text-right text-foreground">{formatCurrency(parsed.amount || 0)}</td>
+                      <td className="py-2 px-3 text-foreground">{parsed.type || "expense"}</td>
                     </tr>
                   );
                 })}

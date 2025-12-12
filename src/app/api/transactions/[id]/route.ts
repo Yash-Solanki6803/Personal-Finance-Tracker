@@ -75,6 +75,15 @@ export async function PUT(request: NextRequest, context: any) {
       data: updateData,
     });
 
+    // Write audit log entry
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        eventType: "transaction_updated",
+        details: JSON.stringify({ transactionId: transaction.id, amount: transaction.amount, type: transaction.type }),
+      },
+    });
+
     return successResponse(transaction, "Transaction updated successfully");
   } catch (error) {
     if (error instanceof Error && "errors" in error) {
@@ -106,12 +115,29 @@ export async function DELETE(request: NextRequest, context: any) {
       return errorResponse("Transaction not found or unauthorized", 404);
     }
 
+    // Store transaction details before deletion for audit log
+    const transactionDetails = {
+      id: existingTransaction.id,
+      amount: existingTransaction.amount,
+      type: existingTransaction.type,
+      category: existingTransaction.category,
+    };
+
     // Delete transaction
-    const transaction = await prisma.transaction.delete({
+    await prisma.transaction.delete({
       where: { id },
     });
 
-    return successResponse(transaction, "Transaction deleted successfully");
+    // Write audit log entry
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        eventType: "transaction_deleted",
+        details: JSON.stringify(transactionDetails),
+      },
+    });
+
+    return successResponse(transactionDetails, "Transaction deleted successfully");
   } catch (error) {
     return handleApiError(error, "DELETE /api/transactions/[id]");
   }

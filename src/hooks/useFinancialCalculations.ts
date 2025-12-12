@@ -1,36 +1,10 @@
+// DEPRECATED: All financial calculations are now backend-driven.
+// This file is retained for reference only. Do not use these hooks in production code.
+
+// If you need financial calculations, use backend API endpoints instead.
+
 import { useMemo } from "react";
-import { roundToDecimal, getCompoundingFrequency, getMonthsBetween } from "@/lib/utils";
-
-/**
- * Hook to calculate compound interest
- * Formula: A = P(1 + r/n)^(nt)
- * Where:
- * P = principal amount
- * r = annual interest rate (as decimal)
- * n = number of times interest compounds per year
- * t = number of years
- * A = final amount
- */
-export const useCompoundInterest = (
-  principal: number,
-  annualRate: number,
-  years: number,
-  compoundingFrequency: string = "monthly"
-): { finalAmount: number; interest: number } => {
-  return useMemo(() => {
-    const n = getCompoundingFrequency(compoundingFrequency);
-    const rate = annualRate / 100; // Convert percentage to decimal
-    const t = years;
-
-    const finalAmount = principal * Math.pow(1 + rate / n, n * t);
-    const interest = finalAmount - principal;
-
-    return {
-      finalAmount: roundToDecimal(finalAmount),
-      interest: roundToDecimal(interest),
-    };
-  }, [principal, annualRate, years, compoundingFrequency]);
-};
+import { roundToDecimal } from "@/lib/utils";
 
 /**
  * Hook to calculate SIP (Systematic Investment Plan) projection
