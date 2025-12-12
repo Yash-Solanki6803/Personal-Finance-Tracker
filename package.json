@@ -10,7 +10,7 @@
     "lint": "eslint",
     "seed": "npx prisma db seed",
     "generate-password": "node scripts/generate-password-hash.mjs",
-    "postinstall": "prisma generate && prisma db push"
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

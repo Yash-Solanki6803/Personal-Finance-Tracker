@@ -1,0 +1,10 @@
+# Vercel Ignore File
+# Ensure generated Prisma files are included in deployment
+!src/generated/
+!src/generated/prisma/
+
+# Ignore common development files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
